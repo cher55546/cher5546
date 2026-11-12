@@ -11,46 +11,146 @@ st.set_page_config(
 )
 
 
-# ---------- Мягкий дизайн ----------
+# ---------- Небесная пастельная тема, крупный шрифт ----------
 
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        color-scheme: light;
+        --ink: #36546c;
+        --muted: #71879a;
+        --sky: #9bc9e8;
+        --sky-light: #edf6fc;
+        --mint: #a9d8ca;
+        --peach: #f0ceb0;
+        --border: #dce8f0;
+    }
+
     [data-testid="stAppViewContainer"] {
         background:
-            radial-gradient(ellipse at 10% 5%, #e8f3fa 0, transparent 35%),
-            linear-gradient(145deg, #f5f9fc, #fbfcfd);
-        color: #40566b;
+            radial-gradient(ellipse at 10% 4%, #e8f4fb 0, transparent 38%),
+            radial-gradient(ellipse at 92% 10%, #eef7fc 0, transparent 34%),
+            linear-gradient(145deg, #f5f9fc, #fbfdfe);
+        color: var(--ink);
+        font-family: "Nunito Sans", "Segoe UI", sans-serif;
     }
-    [data-testid="stHeader"] { background: transparent; }
+
+    [data-testid="stHeader"] {
+        background: transparent;
+    }
+
     .block-container {
         max-width: 1050px;
         padding-top: 2rem;
         padding-bottom: 4rem;
     }
-    h1, h2, h3 { color: #3f5c73 !important; }
+
+    h1, h2, h3, h4 {
+        color: var(--ink) !important;
+        font-family: "Nunito Sans", "Segoe UI", sans-serif !important;
+        letter-spacing: -0.3px;
+    }
+
+    h1 {
+        font-size: 2.65rem !important;
+        font-weight: 800 !important;
+    }
+
+    h2 {
+        font-size: 1.8rem !important;
+        font-weight: 800 !important;
+    }
+
+    h3 {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+    }
+
+    p, label, [data-testid="stMarkdownContainer"] {
+        color: var(--ink);
+        font-family: "Nunito Sans", "Segoe UI", sans-serif;
+        font-size: 1.05rem;
+    }
+
+    [data-testid="stCaptionContainer"] {
+        color: var(--muted);
+        font-size: 1rem;
+    }
+
     [data-testid="stVerticalBlockBorderWrapper"] {
-        border: 1px solid #e1eaf1;
-        border-radius: 20px;
-        background: rgba(255,255,255,.82);
-        box-shadow: 0 8px 24px rgba(90,125,151,.06);
+        border: 1px solid var(--border) !important;
+        border-radius: 22px !important;
+        background: rgba(255, 255, 255, 0.82) !important;
+        box-shadow: 0 10px 28px rgba(89, 128, 153, 0.07);
     }
+
     div[data-testid="stTextInput"] input {
-        border-radius: 12px;
-        border-color: #d9e4ec;
-        background: white;
+        min-height: 48px;
+        border: 1px solid #d5e3ed;
+        border-radius: 14px;
+        background: #ffffff;
+        color: var(--ink);
+        font-family: "Nunito Sans", "Segoe UI", sans-serif;
+        font-size: 1.05rem;
     }
+
+    div[data-testid="stSlider"] {
+        padding-top: 0.25rem;
+    }
+
+    div[data-testid="stSlider"] [role="slider"] {
+        background: #81b9dc;
+    }
+
     .stButton > button {
-        border-radius: 13px;
-        border: 1px solid #d7e5ef;
-        background: #f3f8fb;
-        color: #45647b;
-        font-weight: 600;
+        min-height: 44px;
+        border: 1px solid #d1e2ee;
+        border-radius: 14px;
+        background: #f3f8fc;
+        color: #42637a;
+        font-family: "Nunito Sans", "Segoe UI", sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        transition: 0.18s ease;
     }
-    .stButton > button:hover {
-        border-color: #b8d2e4;
-        background: #eaf3f9;
-        color: #34566f;
+
+    .stButton > button:hover:not(:disabled) {
+        border-color: #aacde2;
+        background: #e8f3fa;
+        color: #31556e;
+        transform: translateY(-1px);
+        box-shadow: 0 5px 14px rgba(89, 128, 153, 0.10);
+    }
+
+    .stButton > button:disabled {
+        opacity: 0.52;
+        cursor: not-allowed;
+    }
+
+    .stButton > button[kind="primary"] {
+        min-height: 50px;
+        border: 1px solid #a9cfe5;
+        background: linear-gradient(100deg, #dceefa, #eaf4fb);
+        color: #34566e;
+        font-size: 1.05rem;
+    }
+
+    [data-testid="stMetric"] {
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.8);
+    }
+
+    [data-testid="stAlert"] {
+        border-radius: 16px;
+    }
+
+    hr {
+        border-color: var(--border);
     }
     </style>
     """,
@@ -58,7 +158,7 @@ st.markdown(
 )
 
 
-# ---------- Данные и стабильные ключи ----------
+# ---------- Состояние приложения ----------
 
 def new_scenario(first=False):
     return {
@@ -75,7 +175,6 @@ def new_option():
 
 
 if "options" not in st.session_state:
-    # Пустые заготовки, а не заполненный пример.
     st.session_state.options = [new_option(), new_option()]
 
 if "calculation" not in st.session_state:
@@ -98,7 +197,7 @@ def score_key(scenario_id):
     return f"score_{scenario_id}"
 
 
-def invalidate_results():
+def clear_results():
     st.session_state.calculation = None
 
 
@@ -109,9 +208,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<p style='text-align:center; color:#718497'>"
-    "Разложите сложный выбор на варианты и возможные последствия."
-    "</p>",
+    """
+    <p style="text-align:center; color:#71879a; font-size:1.12rem;">
+    Разложите сложный выбор на варианты и возможные последствия.
+    </p>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -125,31 +226,34 @@ st.text_input(
 # ---------- Редактор вариантов ----------
 
 st.subheader("1. Добавьте варианты")
-st.caption("Введите названия вариантов и опишите возможные исходы каждого.")
+st.caption(
+    "Заполните названия вариантов и возможные исходы. "
+    "Для каждого исхода укажите вероятность и оценку."
+)
 
 for option_index, option in enumerate(list(st.session_state.options)):
     option_id = option["id"]
     name_key = option_name_key(option_id)
 
     with st.container(border=True):
-        header, remove_column = st.columns([5, 1])
+        header_col, delete_col = st.columns([5, 1.6])
 
-        with header:
+        with header_col:
             st.markdown(f"### Вариант {option_index + 1}")
 
-        with remove_column:
-            if len(st.session_state.options) > 2:
-                if st.button(
-                    "Удалить",
-                    key=f"remove_option_{option_id}",
-                    use_container_width=True,
-                ):
-                    st.session_state.options = [
-                        item for item in st.session_state.options
-                        if item["id"] != option_id
-                    ]
-                    invalidate_results()
-                    st.rerun()
+        with delete_col:
+            st.button(
+                "Удалить вариант",
+                key=f"delete_option_{option_id}",
+                disabled=len(st.session_state.options) <= 2,
+                help=(
+                    "Для сравнения нужно оставить не менее двух вариантов."
+                    if len(st.session_state.options) <= 2
+                    else "Удалить этот вариант"
+                ),
+                use_container_width=True,
+                on_click=lambda oid=option_id: delete_option(oid),
+            )
 
         st.text_input(
             "Название варианта",
@@ -161,31 +265,28 @@ for option_index, option in enumerate(list(st.session_state.options)):
             scenario_id = scenario["id"]
 
             with st.container(border=True):
-                scenario_header, scenario_remove = st.columns([5, 1])
+                scenario_header, scenario_delete = st.columns([5, 1.6])
 
                 with scenario_header:
                     st.markdown(f"**Сценарий {scenario_index + 1}**")
 
-                with scenario_remove:
-                    if len(option["scenarios"]) > 1:
-                        if st.button(
-                            "Убрать",
-                            key=f"remove_scenario_{scenario_id}",
-                            use_container_width=True,
-                        ):
-                            current_option = next(
-                                item for item in st.session_state.options
-                                if item["id"] == option_id
-                            )
-                            current_option["scenarios"] = [
-                                item for item in current_option["scenarios"]
-                                if item["id"] != scenario_id
-                            ]
-                            invalidate_results()
-                            st.rerun()
+                with scenario_delete:
+                    st.button(
+                        "Удалить сценарий",
+                        key=f"delete_scenario_{scenario_id}",
+                        disabled=len(option["scenarios"]) <= 1,
+                        help=(
+                            "У варианта должен остаться хотя бы один сценарий."
+                            if len(option["scenarios"]) <= 1
+                            else "Удалить этот сценарий"
+                        ),
+                        use_container_width=True,
+                        on_click=lambda oid=option_id, sid=scenario_id:
+                            delete_scenario(oid, sid),
+                    )
 
                 st.text_input(
-                    "Описание исхода",
+                    "Описание возможного исхода",
                     placeholder="Например: «Найду более интересную работу»",
                     key=scenario_name_key(scenario_id),
                 )
@@ -213,41 +314,85 @@ for option_index, option in enumerate(list(st.session_state.options)):
                         help="−5 — очень нежелательный исход, +5 — очень желательный.",
                     )
 
-        if st.button(
+        st.button(
             "＋ Добавить сценарий",
             key=f"add_scenario_{option_id}",
-        ):
-            current_option = next(
-                item for item in st.session_state.options
-                if item["id"] == option_id
-            )
-            current_option["scenarios"].append(new_scenario())
-            invalidate_results()
-            st.rerun()
+            on_click=lambda oid=option_id: add_scenario(oid),
+        )
 
 
-# Эти кнопки находятся вне формы — Streamlit разрешает ими пользоваться.
-add_col, remove_col, _ = st.columns([1.5, 1.7, 3])
+# ---------- Обработчики кнопок ----------
+
+def delete_option(option_id):
+    if len(st.session_state.options) > 2:
+        st.session_state.options = [
+            option for option in st.session_state.options
+            if option["id"] != option_id
+        ]
+        clear_results()
+
+
+def delete_scenario(option_id, scenario_id):
+    for option in st.session_state.options:
+        if option["id"] == option_id and len(option["scenarios"]) > 1:
+            option["scenarios"] = [
+                scenario for scenario in option["scenarios"]
+                if scenario["id"] != scenario_id
+            ]
+            clear_results()
+            break
+
+
+def add_scenario(option_id):
+    for option in st.session_state.options:
+        if option["id"] == option_id:
+            option["scenarios"].append(new_scenario())
+            clear_results()
+            break
+
+
+def add_option():
+    st.session_state.options.append(new_option())
+    clear_results()
+
+
+def remove_last_option():
+    if len(st.session_state.options) > 2:
+        st.session_state.options.pop()
+        clear_results()
+
+
+# Кнопки добавления / удаления вариантов
+add_col, remove_col, _ = st.columns([1.7, 1.9, 3])
 
 with add_col:
-    if st.button("＋ Добавить вариант", use_container_width=True):
-        st.session_state.options.append(new_option())
-        invalidate_results()
-        st.rerun()
+    st.button(
+        "＋ Добавить вариант",
+        key="add_option_button",
+        on_click=add_option,
+        use_container_width=True,
+    )
 
 with remove_col:
-    if len(st.session_state.options) > 2:
-        if st.button("− Удалить последний", use_container_width=True):
-            st.session_state.options.pop()
-            invalidate_results()
-            st.rerun()
+    st.button(
+        "− Удалить последний",
+        key="remove_last_option_button",
+        disabled=len(st.session_state.options) <= 2,
+        help="Для сравнения нужно оставить не менее двух вариантов.",
+        on_click=remove_last_option,
+        use_container_width=True,
+    )
 
 
 # ---------- Расчёт ----------
 
 st.divider()
 
-if st.button("Рассчитать и построить дерево", type="primary"):
+if st.button(
+    "Рассчитать и построить дерево",
+    type="primary",
+    use_container_width=True,
+):
     question = st.session_state.get("decision_question", "").strip()
     error = None
     prepared_options = []
@@ -273,7 +418,7 @@ if st.button("Рассчитать и построить дерево", type="pr
             break
 
         used_names.add(option_name)
-        scenarios = []
+        prepared_scenarios = []
 
         for scenario_index, scenario in enumerate(option["scenarios"]):
             scenario_name = st.session_state.get(
@@ -287,7 +432,7 @@ if st.button("Рассчитать и построить дерево", type="pr
                 )
                 break
 
-            scenarios.append({
+            prepared_scenarios.append({
                 "name": scenario_name,
                 "probability": int(
                     st.session_state[probability_key(scenario["id"])]
@@ -300,7 +445,7 @@ if st.button("Рассчитать и построить дерево", type="pr
         if error:
             break
 
-        if sum(item["probability"] for item in scenarios) == 0:
+        if sum(item["probability"] for item in prepared_scenarios) == 0:
             error = (
                 f"В варианте «{option_name}» задайте ненулевую "
                 "вероятность хотя бы одному сценарию."
@@ -309,7 +454,7 @@ if st.button("Рассчитать и построить дерево", type="pr
 
         prepared_options.append({
             "name": option_name,
-            "scenarios": scenarios,
+            "scenarios": prepared_scenarios,
         })
 
     if error:
@@ -319,14 +464,16 @@ if st.button("Рассчитать и построить дерево", type="pr
         results = []
 
         for option in prepared_options:
-            total = sum(
+            total_probability = sum(
                 scenario["probability"]
                 for scenario in option["scenarios"]
             )
+
             normalized = [
-                scenario["probability"] / total * 100
+                scenario["probability"] / total_probability * 100
                 for scenario in option["scenarios"]
             ]
+
             expected_score = sum(
                 normalized[index] / 100 * scenario["score"]
                 for index, scenario in enumerate(option["scenarios"])
@@ -345,32 +492,37 @@ if st.button("Рассчитать и построить дерево", type="pr
         }
 
 
-# ---------- Вертикальное дерево ----------
+# ---------- Визуализация дерева ----------
 
 def build_tree(options, best_name):
-    palette = ["#8BBDE0", "#82BDA8", "#D9B58F", "#B5A9D7", "#D8A9BE"]
+    colors = ["#8BBFE0", "#83C5B0", "#DDBB98", "#B6A9D7", "#D7A9BD"]
 
-    leaves = {}
+    leaf_x = {}
     option_x = {}
     cursor = 0.0
-    gap = 1.25
+    gap = 1.2
 
     for index, option in enumerate(options):
         count = len(option["scenarios"])
-        positions = [cursor + j * gap for j in range(count)]
-        leaves[index] = positions
+        positions = [cursor + item * gap for item in range(count)]
+        leaf_x[index] = positions
         option_x[index] = sum(positions) / len(positions)
         cursor = positions[-1] + gap * 1.7
 
-    all_x = [x for group in leaves.values() for x in group]
-    root_x = sum(all_x) / len(all_x)
+    all_leaf_x = [
+        x for positions in leaf_x.values() for x in positions
+    ]
+    root_x = sum(all_leaf_x) / len(all_leaf_x)
 
     root_y, option_y, scenario_y = 3.2, 2.0, 0.65
     fig = go.Figure()
 
-    # Ветви: решение → варианты → сценарии.
     for index, option in enumerate(options):
-        color = "#70B99F" if option["name"] == best_name else palette[index % len(palette)]
+        color = (
+            "#70B99F"
+            if option["name"] == best_name
+            else colors[index % len(colors)]
+        )
 
         fig.add_trace(go.Scatter(
             x=[root_x, option_x[index]],
@@ -381,9 +533,9 @@ def build_tree(options, best_name):
             showlegend=False,
         ))
 
-        for scenario_index, _scenario in enumerate(option["scenarios"]):
+        for scenario_index in range(len(option["scenarios"])):
             fig.add_trace(go.Scatter(
-                x=[option_x[index], leaves[index][scenario_index]],
+                x=[option_x[index], leaf_x[index][scenario_index]],
                 y=[option_y, scenario_y],
                 mode="lines",
                 line=dict(color=color, width=2),
@@ -395,57 +547,86 @@ def build_tree(options, best_name):
         x=[root_x],
         y=[root_y],
         mode="markers+text",
-        marker=dict(size=30, color="#E9C29F", line=dict(color="white", width=2)),
+        marker=dict(
+            size=32,
+            color="#F0CEB0",
+            line=dict(color="white", width=3),
+        ),
         text=["Ваше решение"],
         textposition="top center",
-        textfont=dict(size=13, color="#40566B"),
+        textfont=dict(size=15, color="#36546C"),
         hoverinfo="skip",
         showlegend=False,
     ))
 
     for index, option in enumerate(options):
-        color = "#70B99F" if option["name"] == best_name else palette[index % len(palette)]
+        color = (
+            "#70B99F"
+            if option["name"] == best_name
+            else colors[index % len(colors)]
+        )
 
         fig.add_trace(go.Scatter(
             x=[option_x[index]],
             y=[option_y],
             mode="markers+text",
-            marker=dict(size=25, color=color, line=dict(color="white", width=2)),
+            marker=dict(
+                size=27,
+                color=color,
+                line=dict(color="white", width=3),
+            ),
             text=[f"{option['name']}<br>Оценка: {option['score']:.2f}"],
             textposition="top center",
-            textfont=dict(size=12, color="#40566B"),
+            textfont=dict(size=13, color="#36546C"),
             hoverinfo="skip",
             showlegend=False,
         ))
 
         for scenario_index, scenario in enumerate(option["scenarios"]):
             probability = option["normalized"][scenario_index]
+
             fig.add_trace(go.Scatter(
-                x=[leaves[index][scenario_index]],
+                x=[leaf_x[index][scenario_index]],
                 y=[scenario_y],
                 mode="markers+text",
-                marker=dict(size=16, color=color, line=dict(color="white", width=2)),
-                text=[f"{scenario['name']}<br>{probability:.1f}% · оценка {scenario['score']:g}"],
+                marker=dict(
+                    size=18,
+                    color=color,
+                    line=dict(color="white", width=2),
+                ),
+                text=[
+                    f"{scenario['name']}<br>"
+                    f"{probability:.1f}% · оценка {scenario['score']:g}"
+                ],
                 textposition="bottom center",
-                textfont=dict(size=10, color="#40566B"),
+                textfont=dict(size=11, color="#36546C"),
                 hovertemplate=(
                     f"<b>{scenario['name']}</b><br>"
-                    f"Вероятность после нормализации: {probability:.1f}%<br>"
+                    f"Вероятность: {probability:.1f}%<br>"
                     f"Оценка: {scenario['score']:g}<extra></extra>"
                 ),
                 showlegend=False,
             ))
 
     fig.update_layout(
-        height=max(560, 450 + 25 * len(all_x)),
-        margin=dict(l=35, r=35, t=80, b=100),
-        paper_bgcolor="#FBFCFD",
-        plot_bgcolor="#FBFCFD",
+        height=max(600, 470 + len(all_leaf_x) * 24),
+        margin=dict(l=40, r=40, t=90, b=110),
+        paper_bgcolor="#FBFDFE",
+        plot_bgcolor="#FBFDFE",
+        font=dict(
+            family="Nunito Sans, Arial, sans-serif",
+            color="#36546C",
+            size=13,
+        ),
         showlegend=False,
-        font=dict(family="Arial", color="#40566B"),
     )
     fig.update_xaxes(visible=False, fixedrange=True)
-    fig.update_yaxes(visible=False, range=[0, 4], autorange="reversed", fixedrange=True)
+    fig.update_yaxes(
+        visible=False,
+        range=[0, 4],
+        autorange="reversed",
+        fixedrange=True,
+    )
     return fig
 
 
@@ -458,18 +639,23 @@ if result:
     st.subheader("2. Результат")
     st.write(f"**Решение:** {result['question']}")
 
-    columns = st.columns(len(result["options"]))
-    for column, option in zip(columns, result["options"]):
+    metric_columns = st.columns(len(result["options"]))
+
+    for column, option in zip(metric_columns, result["options"]):
         with column:
+            label = option["name"]
+            if label == result["best"]:
+                label = f"🌿 {label}"
+
             st.metric(
-                label=f"{'🌿 ' if option['name'] == result['best'] else ''}{option['name']}",
+                label=label,
                 value=f"{option['score']:.2f} / 5",
             )
 
     st.success(f"По указанным оценкам лидирует вариант: **{result['best']}**.")
     st.caption(
         "Это ориентир для размышления, а не автоматическое решение. "
-        "Вероятности внутри каждого варианта нормализуются до 100%."
+        "Вероятности сценариев внутри каждого варианта приводятся к 100%."
     )
 
     st.subheader("Вертикальное дерево возможных исходов")
