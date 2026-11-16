@@ -16,7 +16,7 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------------------
-# Фон сайта: нейронная сеть
+# Фон сайта: нейронные связи
 # ---------------------------------------------------------------------
 
 NEURON_SVG = """
@@ -62,7 +62,7 @@ NEURON_BACKGROUND = base64.b64encode(
 
 
 # ---------------------------------------------------------------------
-# Сине-голубой дизайн
+# Сине-голубой стиль
 # ---------------------------------------------------------------------
 
 st.markdown(
@@ -71,11 +71,7 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
 
     :root {{
-        color-scheme: light;
-        --background-color: #F3F9FD;
-        --secondary-background-color: #EAF4FB;
-        --text-color: #294A65;
-        --primary-color: #5B9BC4;
+        color-scheme: light !important;
     }}
 
     html, body, [data-testid="stAppViewContainer"] {{
@@ -142,38 +138,39 @@ st.markdown(
         box-shadow: 0 10px 26px rgba(62,112,148,.08);
     }}
 
-    /* Светлые поля ввода независимо от системной темы */
-    [data-testid="stTextInput"] [data-baseweb="input"],
-    [data-testid="stTextArea"] [data-baseweb="textarea"],
-    [data-testid="stSelectbox"] [data-baseweb="input"],
-    [data-testid="stDateInput"] [data-baseweb="input"] {{
-        background: #FFFFFF !important;
+    /* Светлые поля ввода */
+    [data-testid="stTextInput"] div[data-baseweb="input"],
+    [data-testid="stTextArea"] div[data-baseweb="textarea"],
+    [data-testid="stSelectbox"] div[data-baseweb="input"] {{
+        background-color: #FFFFFF !important;
         border: 1px solid #AFCFE2 !important;
         border-radius: 13px !important;
         box-shadow: none !important;
-        outline: none !important;
     }}
 
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
     [data-testid="stSelectbox"] input {{
         color: #294A65 !important;
-        background: transparent !important;
-        border: 0 !important;
+        background-color: #FFFFFF !important;
+        -webkit-text-fill-color: #294A65 !important;
+        border: none !important;
         box-shadow: none !important;
-        outline: none !important;
+        caret-color: #315773 !important;
     }}
 
-    [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
-    [data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within,
-    [data-testid="stSelectbox"] [data-baseweb="input"]:focus-within {{
-        border: 1px solid #6EA7CB !important;
+    [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
+    [data-testid="stTextArea"] div[data-baseweb="textarea"]:focus-within,
+    [data-testid="stSelectbox"] div[data-baseweb="input"]:focus-within {{
+        border-color: #6EA7CB !important;
         box-shadow: 0 0 0 3px rgba(110, 167, 203, 0.18) !important;
     }}
 
-    input::placeholder, textarea::placeholder {{
+    [data-testid="stTextInput"] input::placeholder,
+    [data-testid="stTextArea"] textarea::placeholder {{
         color: #7893A8 !important;
         opacity: 1 !important;
+        -webkit-text-fill-color: #7893A8 !important;
     }}
 
     [data-testid="stCheckbox"] label,
@@ -259,7 +256,7 @@ st.markdown(
 
 
 # ---------------------------------------------------------------------
-# Навигация и каталог
+# Каталог и навигация
 # ---------------------------------------------------------------------
 
 TECHNIQUES = {
