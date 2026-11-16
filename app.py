@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="ПСИ-БЛОК",
-    page_icon="favicon.jpg"
+    page_icon="favicon.jpg",
     layout="wide",
 )
 
@@ -642,9 +642,7 @@ def make_decision_diagram(question, options):
     root_y = 680
     root_w = 440
     root_h = 110
-    root_x = 0
 
-    # Рассчёт ширины в зависимости от количества исходов
     total_leaf_count = sum(len(option["scenarios"]) for option in options)
     total_leaf_count = max(total_leaf_count, 1)
     width = left_margin * 2 + (total_leaf_count - 1) * leaf_spacing + card_w
@@ -669,7 +667,7 @@ def make_decision_diagram(question, options):
             "center_x": sum(scenario_centers) / len(scenario_centers),
         })
 
-    # Линии от исходов к вариантам
+    # Lines from leaves to option cards
     for entry in option_layout:
         for sx in entry["scenario_centers"]:
             content.append(
@@ -678,7 +676,7 @@ def make_decision_diagram(question, options):
                 f'fill="none" stroke="{entry["color"]}" stroke-width="4"/>'
             )
 
-    # Линии от вариантов к решению
+    # Lines from option cards to decision card
     for entry in option_layout:
         content.append(
             f'<path d="M {entry["center_x"]} {option_y + option_h} '
@@ -686,7 +684,6 @@ def make_decision_diagram(question, options):
             f'fill="none" stroke="{entry["color"]}" stroke-width="6"/>'
         )
 
-    # Карточки исходов
     current_leaf_index = 0
     for entry in option_layout:
         option = entry["option"]
@@ -710,7 +707,6 @@ def make_decision_diagram(question, options):
                 )
             )
 
-    # Карточки вариантов
     for entry in option_layout:
         content.append(
             svg_card(
@@ -725,7 +721,6 @@ def make_decision_diagram(question, options):
             )
         )
 
-    # Карточка решения
     content.append(
         svg_card(
             root_x - root_w / 2,
@@ -980,10 +975,7 @@ def render_decision_tree():
                 error = f"Для варианта «{name}» задайте ненулевую вероятность."
                 break
 
-            normalized = [
-                item["probability"] / total * 100
-                for item in scenarios
-            ]
+            normalized = [item["probability"] / total * 100 for item in scenarios]
             score = sum(
                 normalized[i] / 100 * item["score"]
                 for i, item in enumerate(scenarios)
@@ -1486,9 +1478,9 @@ def render_about():
     st.subheader("Команда разработчиков")
 
     developers = [
-        {"name": "Артём Черемкин", "role": "Разработчик сайта, практикующий психолог", "photo": "developer1.jpg"},
-        {"name": "Анна Пыжьянова", "role": "Практикующий психолог", "photo": "developer2.jpg"},
-        {"name": "Ферузахон Сайдазимова", "role": "Практикующий психолог", "photo": "developer3.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "developer1.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "developer2.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "developer3.jpg"},
     ]
 
     columns = st.columns(3)
