@@ -1478,9 +1478,9 @@ def render_about():
     st.subheader("Команда разработчиков")
 
     developers = [
-        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "developer1.jpg"},
-        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "developer2.jpg"},
-        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "developer3.jpg"},
+        {"name": "Артём Черемкин", "role": "Разработчик сайта, практикующий психолог", "photo": "developer1.jpg"},
+        {"name": "Анна Пыжьянова", "role": "Практикующий психолог", "photo": "developer2.jpg"},
+        {"name": "Ферузахон Сайдазимова", "role": "Практикующий психолог", "photo": "developer3.jpg"},
     ]
 
     columns = st.columns(3)
