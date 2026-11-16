@@ -10,6 +10,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="ПСИ-БЛОК",
+    page_icon="favicon.png"
     layout="wide",
 )
 
