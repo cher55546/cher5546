@@ -1,6 +1,7 @@
 import html
 import textwrap
 import uuid
+from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -24,10 +25,10 @@ st.markdown(
 
     .stApp {
         background:
-            radial-gradient(ellipse at 12% 8%, rgba(226, 242, 251, .82), transparent 34%),
-            radial-gradient(ellipse at 88% 18%, rgba(235, 246, 251, .75), transparent 36%),
-            #F7FBFD;
-        color: #36546C;
+            radial-gradient(ellipse at 10% 5%, rgba(196, 228, 248, .58), transparent 34%),
+            radial-gradient(ellipse at 92% 18%, rgba(219, 239, 251, .72), transparent 36%),
+            linear-gradient(145deg, #F5FAFE 0%, #EDF6FC 52%, #F8FBFE 100%);
+        color: #294A65;
     }
 
     [data-testid="stHeader"] {
@@ -45,7 +46,7 @@ st.markdown(
     }
 
     h1, h2, h3, h4 {
-        color: #36546C !important;
+        color: #294A65 !important;
         letter-spacing: -0.025em;
     }
 
@@ -65,44 +66,58 @@ st.markdown(
     }
 
     p, label, [data-testid="stCaptionContainer"] {
-        color: #58748A;
+        color: #54718A;
     }
 
     [data-testid="stVerticalBlockBorderWrapper"] {
-        border: 1px solid #DCE8F0 !important;
+        border: 1px solid #D4E5F1 !important;
         border-radius: 20px !important;
-        background: rgba(255,255,255,0.86) !important;
-        box-shadow: 0 10px 24px rgba(89, 128, 151, 0.06);
+        background: rgba(255,255,255,0.88) !important;
+        box-shadow: 0 10px 26px rgba(62, 112, 148, 0.08);
+    }
+
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stTextArea"] textarea {
+        border: 1px solid #C9DDEB;
+        border-radius: 13px;
+        background: #FFFFFF;
+        color: #294A65;
     }
 
     .stButton > button {
-        min-height: 42px;
-        border: 1px solid #D3E2EC;
-        border-radius: 13px;
-        background: #F3F8FC;
-        color: #3D5F77;
+        min-height: 48px;
+        border: 1px solid #C1D8E9;
+        border-radius: 14px;
+        background: #F4F9FD;
+        color: #315773;
+        font-size: 1rem;
         font-weight: 700;
         transition: 0.18s ease;
     }
 
     .stButton > button:hover:not(:disabled) {
-        border-color: #B5D3E5;
-        background: #EAF4FA;
-        color: #34566E;
-        transform: translateY(-1px);
+        border-color: #8FB9D5;
+        background: #E8F4FC;
+        color: #234D6B;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(61, 119, 158, 0.12);
     }
 
     .stButton > button[kind="primary"] {
-        border: 1px solid #B6D4E7;
-        border-radius: 15px;
-        background: linear-gradient(135deg, #E9F5FC, #EEF7F5);
-        color: #36546C;
+        min-height: 58px;
+        border: 1px solid #79AFCF;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #D9EEFA, #E5F3FC);
+        color: #234D6B;
+        font-size: 1.12rem;
+        font-weight: 800;
+        box-shadow: 0 7px 18px rgba(61, 119, 158, 0.10);
     }
 
     [data-testid="stMetric"] {
-        border: 1px solid #DCE8F0;
+        border: 1px solid #D4E5F1;
         border-radius: 17px;
-        background: rgba(255,255,255,0.88);
+        background: rgba(255,255,255,0.9);
         padding: 14px;
     }
 
@@ -111,39 +126,69 @@ st.markdown(
     }
 
     hr {
-        border-color: #DCE8F0;
+        border-color: #D4E5F1;
     }
 
     .hero {
-        padding: 50px 28px;
+        position: relative;
+        overflow: hidden;
+        min-height: 355px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 55px 28px;
         margin: 20px 0 28px 0;
-        border: 1px solid #DCE8F0;
-        border-radius: 26px;
-        background: linear-gradient(135deg, rgba(255,255,255,.94), rgba(235,246,251,.9));
-        box-shadow: 0 14px 34px rgba(89, 128, 151, 0.08);
+        border: 1px solid #C9E0EF;
+        border-radius: 30px;
+        background: linear-gradient(135deg, #E5F3FC 0%, #F4FAFE 52%, #DCEFFA 100%);
+        box-shadow: 0 18px 42px rgba(48, 105, 145, 0.12);
         text-align: center;
     }
 
+    .neuron-pattern {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: .48;
+        pointer-events: none;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+    }
+
     .hero-title {
-        color: #36546C;
-        font-size: clamp(2.6rem, 7vw, 4.7rem);
+        color: #214D6C;
+        font-size: clamp(3.8rem, 9vw, 6.5rem);
         font-weight: 800;
-        line-height: 1.05;
-        letter-spacing: .02em;
-        margin-bottom: 15px;
+        line-height: 1;
+        letter-spacing: .035em;
+        margin-bottom: 22px;
+        text-shadow: 0 3px 14px rgba(255,255,255,.75);
     }
 
     .hero-subtitle {
         max-width: 720px;
         margin: 0 auto;
-        color: #58748A;
-        font-size: 1.18rem;
-        line-height: 1.65;
+        color: #476B85;
+        font-size: 1.25rem;
+        line-height: 1.7;
     }
 
-    .small-note {
-        color: #71879A;
-        font-size: .92rem;
+    .developer-name {
+        margin-top: 12px;
+        color: #294A65;
+        font-size: 1.15rem;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .developer-role {
+        color: #648198;
+        text-align: center;
     }
     </style>
     """,
@@ -231,6 +276,17 @@ def esc(value):
     return html.escape(str(value)).replace("\n", "<br>")
 
 
+def initialize_decision_tree():
+    if "dt_options" not in st.session_state:
+        st.session_state.dt_options = [new_option(), new_option()]
+
+    if "decision_calculation" not in st.session_state:
+        st.session_state.decision_calculation = None
+
+    if "decision_question" not in st.session_state:
+        st.session_state.decision_question = ""
+
+
 def clear_decision_result():
     st.session_state.decision_calculation = None
 
@@ -263,17 +319,6 @@ def probability_key(scenario_id):
 
 def score_key(scenario_id):
     return f"dt_score_{scenario_id}"
-
-
-def initialize_decision_tree():
-    if "dt_options" not in st.session_state:
-        st.session_state.dt_options = [new_option(), new_option()]
-
-    if "decision_calculation" not in st.session_state:
-        st.session_state.decision_calculation = None
-
-    if "decision_question" not in st.session_state:
-        st.session_state.decision_question = ""
 
 
 def add_decision_option():
@@ -389,7 +434,6 @@ def build_tree_svg(options, best_name, question):
       <rect width="100%" height="100%" rx="24" fill="#F8FBFD"/>
     """]
 
-    # Соединительные ветви
     for index, group in enumerate(groups):
         option = group["option"]
         color = "#65AD91" if option["name"] == best_name else colors[index % len(colors)]
@@ -414,7 +458,6 @@ def build_tree_svg(options, best_name, question):
                     stroke-linecap="round"/>
             """)
 
-    # Ствол
     parts.append(f"""
       <path d="M {root_x} {root_card_y}
                C {root_x - 8} {root_card_y - 35},
@@ -424,7 +467,6 @@ def build_tree_svg(options, best_name, question):
             stroke-linecap="round"/>
     """)
 
-    # Варианты и сценарии
     for index, group in enumerate(groups):
         option = group["option"]
         color = "#65AD91" if option["name"] == best_name else colors[index % len(colors)]
@@ -493,7 +535,6 @@ def build_tree_svg(options, best_name, question):
               </text>
             """)
 
-    # Корневая карточка поверх ствола
     question_lines = wrap_svg_label(question, width=42, max_lines=2)
     root_box_width = 390
     root_box_height = 66
@@ -529,7 +570,7 @@ def build_tree_svg(options, best_name, question):
 
 
 # -------------------------------------------------------------------
-# Страница дерева решений
+# Дерево решений: интерфейс
 # -------------------------------------------------------------------
 
 def render_decision_tree():
@@ -546,7 +587,7 @@ def render_decision_tree():
     )
 
     st.subheader("Добавьте варианты")
-    st.caption("Для каждого варианта укажите возможные исходы, их вероятность и оценку для вас.")
+    st.caption("Для каждого варианта укажите возможные исходы, вероятность и оценку для вас.")
 
     for option_index, option in enumerate(list(st.session_state.dt_options)):
         option_id = option["id"]
@@ -802,10 +843,7 @@ def render_chain_analysis():
     initialize_chain()
 
     st.title("🔗 Цепочный анализ поведения (ДБТ)")
-    st.write(
-        "Совместно исследуйте контекст, последовательность реакций, "
-        "целевое поведение и его последствия."
-    )
+    st.write("Совместно исследуйте контекст, последовательность реакций, целевое поведение и его последствия.")
 
     st.info(
         "Если обсуждение становится слишком интенсивным, можно сделать паузу, "
@@ -923,7 +961,6 @@ def render_chain_analysis():
         placeholder="Есть ли что-то, что хотелось бы сделать для восстановления или поддержки?",
     )
 
-    # Живая текстовая схема
     if st.checkbox("Показать сводную карту цепочки", value=True, key="chain_show_summary"):
         st.markdown("### Сводная карта")
 
@@ -994,10 +1031,7 @@ def render_exposure():
     initialize_exposure()
 
     st.title("🪜 Иерархия экспозиции")
-    st.write(
-        "Составьте с клиентом лестницу ситуаций для обсуждения и планирования "
-        "постепенной практики."
-    )
+    st.write("Составьте с клиентом лестницу ситуаций для обсуждения и планирования постепенной практики.")
 
     st.info(
         "Практика должна быть добровольной и согласованной со специалистом. "
@@ -1040,32 +1074,32 @@ def render_exposure():
                     use_container_width=True,
                 )
 
-            situation = st.text_area(
+            st.text_area(
                 "Ситуация",
                 key=f"exposure_situation_{step_id}",
                 placeholder="Опишите конкретную ситуацию.",
             )
 
-            distress = st.slider(
+            st.slider(
                 "Ожидаемая тревога (0–10)",
                 min_value=0,
                 max_value=10,
                 key=f"exposure_distress_{step_id}",
             )
 
-            prediction = st.text_area(
+            st.text_area(
                 "Прогноз или опасение",
                 key=f"exposure_prediction_{step_id}",
                 placeholder="Чего вы ожидаете или опасаетесь?",
             )
 
-            plan = st.text_area(
+            st.text_area(
                 "Обсуждаемый посильный шаг",
                 key=f"exposure_plan_{step_id}",
                 placeholder="Какой конкретный шаг вы планируете вместе со специалистом?",
             )
 
-            status = st.selectbox(
+            st.selectbox(
                 "Статус",
                 ["Не обсуждали", "Обсудили", "Запланировали", "Попробовали"],
                 key=f"exposure_status_{step_id}",
@@ -1079,11 +1113,11 @@ def render_exposure():
 
         items.append({
             "id": step_id,
-            "situation": situation,
-            "distress": distress,
-            "prediction": prediction,
-            "plan": plan,
-            "status": status,
+            "situation": st.session_state.get(f"exposure_situation_{step_id}", ""),
+            "distress": st.session_state.get(f"exposure_distress_{step_id}", 3),
+            "prediction": st.session_state.get(f"exposure_prediction_{step_id}", ""),
+            "plan": st.session_state.get(f"exposure_plan_{step_id}", ""),
+            "status": st.session_state.get(f"exposure_status_{step_id}", "Не обсуждали"),
             "index": index,
         })
 
@@ -1118,10 +1152,7 @@ def render_exposure():
 
 def render_act_matrix():
     st.title("🧭 ACT-матрица")
-    st.write(
-        "Визуальная карта внутреннего опыта и поведения: что уводит от "
-        "дискомфорта и какие действия приближают к важному."
-    )
+    st.write("Визуальная карта внутреннего опыта и поведения: что уводит от дискомфорта и какие действия приближают к важному.")
 
     st.info(
         "Квадранты — материал для совместного исследования, а не оценка "
@@ -1217,19 +1248,59 @@ def render_act_matrix():
 
 
 # -------------------------------------------------------------------
-# Страницы сайта
+# Home / About / Library
 # -------------------------------------------------------------------
 
 def render_home():
     st.markdown(
         """
         <div class="hero">
-            <div class="hero-title">ПСИ-БЛОК</div>
-            <div class="hero-subtitle">
-                Набор наглядных инструментов для совместной работы психолога
-                и клиента на консультации. Проект создан, чтобы структурировать
-                обсуждение, сделать идеи видимыми и помочь возвращаться к ним
-                в ходе работы.
+            <svg class="neuron-pattern" viewBox="0 0 1200 480"
+                 preserveAspectRatio="xMidYMid slice"
+                 xmlns="http://www.w3.org/2000/svg">
+                <g fill="none" stroke="#5794BB" stroke-width="2">
+                    <path d="M40 95 L170 155 L285 80 L420 145 L545 65"/>
+                    <path d="M170 155 L250 285 L390 250 L420 145"/>
+                    <path d="M285 80 L315 25"/>
+                    <path d="M390 250 L520 330 L650 260 L770 325"/>
+                    <path d="M545 65 L680 120 L810 65 L930 145"/>
+                    <path d="M680 120 L650 260"/>
+                    <path d="M810 65 L865 25"/>
+                    <path d="M930 145 L1080 90 L1170 170"/>
+                    <path d="M930 145 L980 285 L1130 330"/>
+                    <path d="M770 325 L850 415 L980 285"/>
+                    <path d="M40 95 L25 210"/>
+                    <path d="M520 330 L485 430"/>
+                </g>
+                <g fill="#4D8FB8" stroke="#F5FAFE" stroke-width="5">
+                    <circle cx="40" cy="95" r="10"/>
+                    <circle cx="170" cy="155" r="13"/>
+                    <circle cx="285" cy="80" r="10"/>
+                    <circle cx="420" cy="145" r="12"/>
+                    <circle cx="545" cy="65" r="9"/>
+                    <circle cx="250" cy="285" r="10"/>
+                    <circle cx="390" cy="250" r="13"/>
+                    <circle cx="520" cy="330" r="10"/>
+                    <circle cx="650" cy="260" r="12"/>
+                    <circle cx="680" cy="120" r="9"/>
+                    <circle cx="810" cy="65" r="12"/>
+                    <circle cx="930" cy="145" r="13"/>
+                    <circle cx="1080" cy="90" r="10"/>
+                    <circle cx="980" cy="285" r="11"/>
+                    <circle cx="1130" cy="330" r="9"/>
+                    <circle cx="850" cy="415" r="10"/>
+                    <circle cx="1170" cy="170" r="8"/>
+                </g>
+            </svg>
+
+            <div class="hero-content">
+                <div class="hero-title">ПСИ-БЛОК</div>
+                <div class="hero-subtitle">
+                    Пространство с наглядными инструментами для совместной
+                    работы психолога и клиента. Мы создаём его, чтобы
+                    структурировать обсуждение и делать психологические техники
+                    удобно заметными и применимыми в реальной практике.
+                </div>
             </div>
         </div>
         """,
@@ -1239,11 +1310,11 @@ def render_home():
     left, right = st.columns(2)
 
     with left:
-        if st.button("📚 Библиотека техник", type="primary", use_container_width=True):
+        if st.button("📚  Библиотека техник", type="primary", use_container_width=True):
             go_library()
 
     with right:
-        if st.button("ℹ️ О нас", use_container_width=True):
+        if st.button("ℹ️  О нас", type="primary", use_container_width=True):
             go_about()
 
     st.divider()
@@ -1286,22 +1357,55 @@ def render_about():
 
     st.markdown(
         """
-        **ПСИ-БЛОК** — черновой проект библиотеки интерактивных инструментов
+        **ПСИ-БЛОК** — проект библиотеки интерактивных инструментов
         для психологических консультаций.
 
-        Его задача — не заменить психолога и не принимать решения за клиента,
-        а помочь специалисту и клиенту совместно структурировать обсуждение,
-        визуализировать связи и фиксировать идеи в ходе сессии.
-
-        Техники в библиотеке представлены как прототипы. Перед использованием
-        в реальной практике их нужно проверить вместе со специалистами,
-        доработать инструкции и отдельно продумать конфиденциальность данных.
+        Мы хотим помочь психологу и клиенту совместно структурировать
+        обсуждение, визуализировать связи и возвращаться к важным идеям
+        в ходе работы. Инструменты не заменяют специалиста и не принимают
+        решения за клиента.
         """
     )
 
+    st.divider()
+    st.subheader("Команда разработчиков")
+
+    developers = [
+        {
+            "name": "Имя Фамилия",
+            "role": "Роль в проекте",
+            "photo": "assets/developer1.jpg",
+        },
+        {
+            "name": "Имя Фамилия",
+            "role": "Роль в проекте",
+            "photo": "assets/developer2.jpg",
+        },
+    ]
+
+    columns = st.columns(len(developers))
+
+    for column, person in zip(columns, developers):
+        with column:
+            with st.container(border=True):
+                photo_path = Path(person["photo"])
+
+                if photo_path.exists():
+                    st.image(str(photo_path), use_container_width=True)
+                else:
+                    st.info(f"Фотография не найдена: `{person['photo']}`")
+
+                st.markdown(
+                    f"<div class='developer-name'>{html.escape(person['name'])}</div>"
+                    f"<div class='developer-role'>{html.escape(person['role'])}</div>",
+                    unsafe_allow_html=True,
+                )
+
+    st.divider()
     st.warning(
-        "Не вводите в этот прототип идентифицирующие или особо чувствительные "
-        "сведения: приложение не реализует защищённое хранение клиентских данных."
+        "Это прототип. Не вводите в него идентифицирующие или особенно "
+        "чувствительные сведения: защищённое хранение клиентских данных "
+        "пока не реализовано."
     )
 
 
