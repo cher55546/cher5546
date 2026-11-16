@@ -1,11 +1,9 @@
 import html
 import textwrap
 import uuid
-from pathlib import Path
-from io import BytesIO
 
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
+import streamlit.components.v1 as components
 
 
 st.set_page_config(
@@ -16,12 +14,12 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------------------
-# Дизайн и нейронный узор
+# Общие стили и фон
 # ---------------------------------------------------------------------
 
-NEURON_PATTERN = """
+NEURON_SVG = """
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800">
-  <g fill="none" stroke="#4389B5" stroke-opacity="0.13" stroke-width="2">
+  <g fill="none" stroke="#4389B5" stroke-opacity="0.14" stroke-width="2">
     <path d="M25 92 L130 145 L225 80 L340 150 L455 70 L565 145 L690 86 L815 155 L955 82"/>
     <path d="M130 145 L175 290 L300 340 L420 250 L565 145"/>
     <path d="M225 80 L245 20"/>
@@ -38,7 +36,7 @@ NEURON_PATTERN = """
     <path d="M840 500 L815 650 L930 735"/>
     <path d="M310 635 L390 760"/>
   </g>
-  <g fill="#4389B5" fill-opacity="0.17" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="3">
+  <g fill="#4389B5" fill-opacity="0.18" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="3">
     <circle cx="25" cy="92" r="8"/><circle cx="130" cy="145" r="12"/>
     <circle cx="225" cy="80" r="9"/><circle cx="340" cy="150" r="12"/>
     <circle cx="455" cy="70" r="8"/><circle cx="565" cy="145" r="11"/>
@@ -61,9 +59,17 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
 
-    .stApp {
-        background-color: #F3F9FD;
-        color: #294A65;
+    :root {
+        color-scheme: light;
+        --background-color: #F3F9FD;
+        --secondary-background-color: #EAF4FB;
+        --text-color: #294A65;
+        --primary-color: #5B9BC4;
+    }
+
+    html, body, [data-testid="stAppViewContainer"] {
+        background-color: #F3F9FD !important;
+        color: #294A65 !important;
     }
 
     [data-testid="stAppViewContainer"] {
@@ -73,7 +79,7 @@ st.markdown(
     }
 
     [data-testid="stHeader"] {
-        background: transparent;
+        background: transparent !important;
     }
 
     .block-container {
@@ -82,7 +88,26 @@ st.markdown(
         padding-bottom: 4rem;
     }
 
-    h1, h2, h3, h4, p, label, button, input, textarea {
+    /* Нейронный рисунок на всех страницах, включая техники */
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: .60;
+        background-image: url("NEURON_BACKGROUND_PLACEHOLDER");
+        background-repeat: repeat;
+        background-size: 1000px 800px;
+        background-position: left top;
+    }
+
+    [data-testid="stAppViewContainer"] > .main {
+        position: relative;
+        z-index: 1;
+    }
+
+    h1, h2, h3, h4, p, label, button, input, textarea, select {
         font-family: "Nunito Sans", "Segoe UI", sans-serif !important;
     }
 
@@ -95,77 +120,126 @@ st.markdown(
     h2 { font-size: 1.85rem !important; font-weight: 800 !important; }
     h3 { font-size: 1.3rem !important; font-weight: 800 !important; }
 
-    p, label, [data-testid="stCaptionContainer"] {
-        color: #54718A;
+    p, label, [data-testid="stCaptionContainer"],
+    [data-testid="stMarkdownContainer"] {
+        color: #476B85 !important;
     }
 
+    /* Карточки */
     [data-testid="stVerticalBlockBorderWrapper"] {
-        border: 1px solid #D4E5F1 !important;
+        border: 1px solid #C9DFEF !important;
         border-radius: 20px !important;
-        background: rgba(255,255,255,.93) !important;
+        background: rgba(248,252,255,.96) !important;
         box-shadow: 0 10px 26px rgba(62,112,148,.08);
     }
 
-    div[data-testid="stTextInput"] input,
-    div[data-testid="stTextArea"] textarea {
-        border: 1px solid #C9DDEB;
-        border-radius: 13px;
-        background: #FFFFFF;
-        color: #294A65;
+    /* Не позволяем системной тёмной теме превращать поля в чёрные */
+    input, textarea, select,
+    [data-baseweb="input"],
+    [data-baseweb="textarea"],
+    [data-baseweb="select"] > div,
+    [data-baseweb="popover"],
+    [data-baseweb="menu"] {
+        color: #294A65 !important;
+        background-color: #FFFFFF !important;
+        border-color: #AFCFE2 !important;
     }
 
+    input::placeholder, textarea::placeholder {
+        color: #7893A8 !important;
+        opacity: 1 !important;
+    }
+
+    [data-baseweb="select"] span,
+    [data-baseweb="menu"] li {
+        color: #294A65 !important;
+    }
+
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea {
+        border: 1px solid #AFCFE2 !important;
+        border-radius: 13px !important;
+        background: #FFFFFF !important;
+        color: #294A65 !important;
+        caret-color: #315773 !important;
+    }
+
+    [data-testid="stTextInput"] input:focus,
+    [data-testid="stTextArea"] textarea:focus {
+        border-color: #5B9BC4 !important;
+        box-shadow: 0 0 0 2px rgba(91,155,196,.18) !important;
+    }
+
+    /* Слайдеры, чекбоксы и радиокнопки */
+    [data-testid="stSlider"] [role="slider"] {
+        background: #4F94C0 !important;
+        border-color: #4F94C0 !important;
+    }
+
+    [data-testid="stCheckbox"] label,
+    [data-testid="stRadio"] label {
+        color: #315773 !important;
+    }
+
+    /* Кнопки */
     .stButton > button {
         min-height: 46px;
-        border: 1px solid #C1D8E9;
-        border-radius: 14px;
-        background: #F4F9FD;
-        color: #315773;
+        border: 1px solid #AFCFE2 !important;
+        border-radius: 14px !important;
+        background: #F1F8FD !important;
+        color: #315773 !important;
         font-size: 1rem;
         font-weight: 700;
         transition: .18s ease;
     }
 
     .stButton > button:hover:not(:disabled) {
-        border-color: #8FB9D5;
-        background: #E8F4FC;
-        color: #234D6B;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(61,119,158,.12);
+        border-color: #6EA7CB !important;
+        background: #E0F0FA !important;
+        color: #234D6B !important;
+        transform: translateY(-1px);
     }
 
     .stButton > button[kind="primary"] {
         min-height: 60px;
-        border: 1px solid #79AFCF;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #D9EEFA, #E5F3FC);
-        color: #234D6B;
+        border: 1px solid #6EA7CB !important;
+        border-radius: 16px !important;
+        background: linear-gradient(135deg, #D9EEFA, #E5F3FC) !important;
+        color: #234D6B !important;
         font-size: 1.12rem;
         font-weight: 800;
-        box-shadow: 0 7px 18px rgba(61,119,158,.10);
     }
 
     [data-testid="stDownloadButton"] > button {
         min-height: 46px;
-        border: 1px solid #8FB9D5;
-        border-radius: 14px;
-        background: #E8F4FC;
-        color: #234D6B;
+        border: 1px solid #6EA7CB !important;
+        border-radius: 14px !important;
+        background: #E7F4FC !important;
+        color: #234D6B !important;
         font-weight: 800;
     }
 
+    /* Информационные сообщения тоже только синие */
+    [data-testid="stAlert"] {
+        border: 1px solid #BCD9EB !important;
+        border-radius: 15px !important;
+        background: #EAF5FC !important;
+        color: #315773 !important;
+    }
+
+    [data-testid="stAlert"] * {
+        color: #315773 !important;
+    }
+
     [data-testid="stMetric"] {
-        border: 1px solid #D4E5F1;
+        border: 1px solid #C9DFEF;
         border-radius: 17px;
-        background: rgba(255,255,255,.94);
+        background: rgba(248,252,255,.96);
         padding: 14px;
     }
 
-    [data-testid="stAlert"] {
-        border-radius: 15px;
-    }
-
     hr {
-        border-color: #D4E5F1;
+        border-color: #C9DFEF !important;
     }
 
     .developer-name {
@@ -181,13 +255,16 @@ st.markdown(
         text-align: center;
     }
     </style>
-    """,
+    """.replace(
+        "NEURON_BACKGROUND_PLACEHOLDER",
+        "data:image/svg+xml," + __import__("urllib.parse").parse.quote(NEURON_SVG),
+    ),
     unsafe_allow_html=True,
 )
 
 
 # ---------------------------------------------------------------------
-# Навигация
+# Навигация и каталог
 # ---------------------------------------------------------------------
 
 TECHNIQUES = {
@@ -252,304 +329,431 @@ def render_navigation():
 
 
 # ---------------------------------------------------------------------
-# PNG-экспорт на Pillow
+# SVG: схемы с корректной кириллицей
 # ---------------------------------------------------------------------
 
-def load_font(size, bold=False):
-    candidates = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold
-        else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf" if bold
-        else "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
-        "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf",
-    ]
-
-    for candidate in candidates:
-        try:
-            return ImageFont.truetype(candidate, size=size)
-        except (OSError, IOError):
-            continue
-
-    return ImageFont.load_default()
+def svg_escape(value):
+    return html.escape(str(value or ""), quote=True)
 
 
-def wrap_text(text, max_chars=34):
-    text = str(text or "").strip()
-    if not text:
-        return "—"
-    return "\n".join(textwrap.wrap(text, width=max_chars) or ["—"])
+def wrap_svg_text(value, width=28, max_lines=5):
+    value = str(value or "").strip()
+    if not value:
+        return ["—"]
+
+    lines = []
+    for paragraph in value.splitlines():
+        lines.extend(textwrap.wrap(paragraph, width=width) or [""])
+
+    return lines[:max_lines] or ["—"]
 
 
-def draw_centered_text(draw, text, xy, font, fill, max_chars=34, spacing=5):
-    wrapped = wrap_text(text, max_chars)
-    draw.multiline_text(
-        xy,
-        wrapped,
-        font=font,
-        fill=fill,
-        anchor="mm",
-        align="center",
-        spacing=spacing,
-    )
+def svg_multiline(value, x, y, width=28, font_size=16, fill="#294A65",
+                  anchor="middle", max_lines=5, line_height=None):
+    lines = wrap_svg_text(value, width, max_lines)
+    line_height = line_height or int(font_size * 1.35)
+    spans = []
 
-
-def draw_card(draw, box, title, body, fill="#FFFFFF", outline="#AFCFE2"):
-    x1, y1, x2, y2 = box
-    draw.rounded_rectangle(
-        box,
-        radius=22,
-        fill=fill,
-        outline=outline,
-        width=3,
-    )
-    draw_centered_text(
-        draw, title, ((x1 + x2) / 2, y1 + 28),
-        load_font(20, bold=True), "#294A65", max_chars=32,
-    )
-    draw_centered_text(
-        draw, body, ((x1 + x2) / 2, (y1 + y2) / 2 + 20),
-        load_font(17), "#476B85", max_chars=max(16, int((x2 - x1) / 15)),
-    )
-
-
-def png_bytes(image):
-    output = BytesIO()
-    image.save(output, format="PNG", optimize=True)
-    return output.getvalue()
-
-
-def download_png(label, data, filename, key):
-    st.download_button(
-        label=label,
-        data=data,
-        file_name=filename,
-        mime="image/png",
-        key=key,
-        use_container_width=True,
-    )
-
-
-def make_vertical_png(title, sections, note=""):
-    width = 1200
-    card_height = 130
-    gap = 38
-    top = 100
-    height = max(400, top + len(sections) * (card_height + gap) + 100)
-
-    image = Image.new("RGB", (width, height), "#F5FAFE")
-    draw = ImageDraw.Draw(image)
-
-    draw.text(
-        (width // 2, 45),
-        title,
-        font=load_font(34, bold=True),
-        fill="#294A65",
-        anchor="mm",
-    )
-
-    colors = ["#EAF5FB", "#EFF8F6", "#F2F1FA", "#FFF6EC", "#FCEFF2"]
-
-    for index, (heading, body) in enumerate(sections):
-        y = top + index * (card_height + gap)
-        box = (100, y, width - 100, y + card_height)
-        draw_card(
-            draw,
-            box,
-            heading,
-            body,
-            fill=colors[index % len(colors)],
+    for index, line in enumerate(lines):
+        dy = 0 if index == 0 else line_height
+        spans.append(
+            f'<tspan x="{x}" dy="{dy}">{svg_escape(line)}</tspan>'
         )
 
-        if index < len(sections) - 1:
-            cx = width // 2
-            y1 = y + card_height + 4
-            y2 = y + card_height + gap - 4
-            draw.line((cx, y1, cx, y2), fill="#78A8BF", width=4)
-            draw.polygon(
-                [(cx - 10, y2 - 12), (cx + 10, y2 - 12), (cx, y2)],
-                fill="#78A8BF",
-            )
-
-    if note:
-        draw.text(
-            (width // 2, height - 35),
-            note,
-            font=load_font(15),
-            fill="#648198",
-            anchor="mm",
-        )
-
-    return png_bytes(image)
-
-
-def make_decision_png(question, options):
-    width = max(1400, len(options) * 500)
-    height = 1000
-    image = Image.new("RGB", (width, height), "#F5FAFE")
-    draw = ImageDraw.Draw(image)
-
-    draw.text(
-        (width // 2, 50),
-        "Дерево решений",
-        font=load_font(36, bold=True),
-        fill="#294A65",
-        anchor="mm",
-    )
-    draw.text(
-        (width // 2, 110),
-        wrap_text(question, max(90, width // 18)),
-        font=load_font(21),
-        fill="#476B85",
-        anchor="mm",
+    return (
+        f'<text x="{x}" y="{y}" text-anchor="{anchor}" '
+        f'font-family="Arial, sans-serif" font-size="{font_size}" '
+        f'fill="{fill}">{"".join(spans)}</text>'
     )
 
-    root_x = width // 2
-    root_y = 855
-    root_box = (root_x - 220, root_y - 55, root_x + 220, root_y + 55)
-    draw_card(draw, root_box, "Решение", question, fill="#F4E2D2", outline="#D8A77E")
 
+def svg_card(x, y, width, height, title, body, fill="#F8FCFF", stroke="#AFCFE2"):
+    title_y = y + 32
+    body_y = y + 62
+    max_chars = max(14, int(width / 12))
+
+    return f"""
+    <rect x="{x}" y="{y}" width="{width}" height="{height}" rx="22"
+          fill="{fill}" stroke="{stroke}" stroke-width="3"/>
+    {svg_multiline(title, x + width / 2, title_y, width=max_chars,
+                   font_size=18, fill="#294A65", max_lines=2)}
+    {svg_multiline(body, x + width / 2, body_y, width=max_chars,
+                   font_size=15, fill="#476B85", max_lines=5)}
+    """
+
+
+def svg_document(title, content, width, height):
+    return f"""<svg xmlns="http://www.w3.org/2000/svg"
+        width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+      <rect width="100%" height="100%" fill="#F5FAFE"/>
+      <text x="{width / 2}" y="48" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="30" font-weight="bold"
+        fill="#294A65">{svg_escape(title)}</text>
+      {content}
+    </svg>"""
+
+
+def render_interactive_diagram(svg, component_key, height=680):
+    """
+    Показывает SVG со встроенным масштабированием, перемещением и PNG-экспортом.
+    Кириллица рисуется браузером, поэтому Pillow и серверные шрифты не нужны.
+    """
+    safe_key = "".join(ch for ch in component_key if ch.isalnum() or ch == "_")
+    svg_id = f"diagram_{safe_key}"
+
+    component_html = f"""
+    <!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        html, body {{
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: transparent;
+          font-family: Arial, sans-serif;
+        }}
+        .toolbar {{
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          padding: 6px 2px 10px 2px;
+        }}
+        .toolbar button {{
+          border: 1px solid #9FC5DE;
+          border-radius: 10px;
+          background: #EAF5FC;
+          color: #294A65;
+          padding: 8px 13px;
+          font-weight: 700;
+          cursor: pointer;
+        }}
+        .toolbar button:hover {{
+          background: #D9EDF9;
+        }}
+        .hint {{
+          color: #54718A;
+          font-size: 13px;
+          margin-left: 6px;
+        }}
+        .viewport {{
+          width: 100%;
+          height: calc(100% - 52px);
+          overflow: hidden;
+          border: 1px solid #BBD7E8;
+          border-radius: 16px;
+          background: #F5FAFE;
+          cursor: grab;
+          touch-action: none;
+        }}
+        .viewport.dragging {{
+          cursor: grabbing;
+        }}
+        #{svg_id} {{
+          display: block;
+          width: 100%;
+          height: 100%;
+          user-select: none;
+        }}
+      </style>
+    </head>
+    <body>
+      <div class="toolbar">
+        <button id="zoomIn">＋ Масштаб</button>
+        <button id="zoomOut">− Масштаб</button>
+        <button id="reset">Сбросить вид</button>
+        <button id="downloadPng">⬇ Скачать PNG</button>
+        <span class="hint">Колесо мыши — масштаб · перетаскивание — перемещение</span>
+      </div>
+      <div class="viewport" id="viewport">
+        {svg.replace("<svg ", f'<svg id="{svg_id}" ' , 1)}
+      </div>
+      <script>
+        (() => {{
+          const svg = document.getElementById("{svg_id}");
+          const viewport = document.getElementById("viewport");
+          const original = svg.viewBox.baseVal;
+          const state = {{
+            x: original.x,
+            y: original.y,
+            width: original.width,
+            height: original.height
+          }};
+
+          function applyViewBox() {{
+            svg.setAttribute(
+              "viewBox",
+              `${{state.x}} ${{state.y}} ${{state.width}} ${{state.height}}`
+            );
+          }}
+
+          function zoom(factor, clientX, clientY) {{
+            const rect = svg.getBoundingClientRect();
+            const px = clientX === undefined ? rect.left + rect.width / 2 : clientX;
+            const py = clientY === undefined ? rect.top + rect.height / 2 : clientY;
+            const rx = (px - rect.left) / rect.width;
+            const ry = (py - rect.top) / rect.height;
+            const oldWidth = state.width;
+            const oldHeight = state.height;
+
+            state.width *= factor;
+            state.height *= factor;
+            state.x += (oldWidth - state.width) * rx;
+            state.y += (oldHeight - state.height) * ry;
+            applyViewBox();
+          }}
+
+          document.getElementById("zoomIn").addEventListener("click", () => zoom(0.8));
+          document.getElementById("zoomOut").addEventListener("click", () => zoom(1.25));
+          document.getElementById("reset").addEventListener("click", () => {{
+            state.x = original.x;
+            state.y = original.y;
+            state.width = original.width;
+            state.height = original.height;
+            applyViewBox();
+          }});
+
+          viewport.addEventListener("wheel", event => {{
+            event.preventDefault();
+            zoom(event.deltaY < 0 ? 0.9 : 1.1, event.clientX, event.clientY);
+          }}, {{ passive: false }});
+
+          let dragging = false;
+          let lastX = 0;
+          let lastY = 0;
+
+          viewport.addEventListener("pointerdown", event => {{
+            dragging = true;
+            lastX = event.clientX;
+            lastY = event.clientY;
+            viewport.classList.add("dragging");
+            viewport.setPointerCapture(event.pointerId);
+          }});
+
+          viewport.addEventListener("pointermove", event => {{
+            if (!dragging) return;
+            const rect = svg.getBoundingClientRect();
+            const scaleX = state.width / rect.width;
+            const scaleY = state.height / rect.height;
+            state.x -= (event.clientX - lastX) * scaleX;
+            state.y -= (event.clientY - lastY) * scaleY;
+            lastX = event.clientX;
+            lastY = event.clientY;
+            applyViewBox();
+          }});
+
+          function stopDragging() {{
+            dragging = false;
+            viewport.classList.remove("dragging");
+          }}
+
+          viewport.addEventListener("pointerup", stopDragging);
+          viewport.addEventListener("pointercancel", stopDragging);
+
+          document.getElementById("downloadPng").addEventListener("click", () => {{
+            const clone = svg.cloneNode(true);
+            clone.removeAttribute("id");
+            clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            clone.setAttribute("width", original.width);
+            clone.setAttribute("height", original.height);
+            clone.setAttribute(
+              "viewBox",
+              `${{original.x}} ${{original.y}} ${{original.width}} ${{original.height}}`
+            );
+
+            const source = new XMLSerializer().serializeToString(clone);
+            const svgBlob = new Blob([source], {{ type: "image/svg+xml;charset=utf-8" }});
+            const url = URL.createObjectURL(svgBlob);
+            const image = new Image();
+
+            image.onload = () => {{
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.round(original.width * 2);
+              canvas.height = Math.round(original.height * 2);
+              const context = canvas.getContext("2d");
+              context.fillStyle = "#F5FAFE";
+              context.fillRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(image, 0, 0, canvas.width, canvas.height);
+              URL.revokeObjectURL(url);
+
+              canvas.toBlob(blob => {{
+                if (!blob) {{
+                  alert("Не удалось создать PNG. Попробуйте ещё раз.");
+                  return;
+                }}
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "{safe_key}.png";
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+              }}, "image/png");
+            }};
+
+            image.onerror = () => {{
+              URL.revokeObjectURL(url);
+              alert("Не удалось подготовить изображение для скачивания.");
+            }};
+
+            image.src = url;
+          }});
+        }})();
+      </script>
+    </body>
+    </html>
+    """
+
+    components.html(component_html, height=height, scrolling=False)
+
+
+# ---------------------------------------------------------------------
+# Схемы для техник
+# ---------------------------------------------------------------------
+
+def make_decision_svg(question, options):
+    width = max(1100, len(options) * 430)
+    height = 850
+    content = []
+
+    root_x = width / 2
+    root_y = 735
+    option_y = 480
+    scenario_y = 180
+
+    colors = ["#6AAED0", "#65B99C", "#76A5D2", "#8BB7D8", "#5F9FC4"]
     option_xs = [
-        int(width * (i + 1) / (len(options) + 1))
-        for i in range(len(options))
+        width * (index + 1) / (len(options) + 1)
+        for index in range(len(options))
     ]
-    palette = ["#80BFE0", "#71BFA9", "#E1AE83", "#A99BD0", "#D99BB2"]
 
     for oi, option in enumerate(options):
         ox = option_xs[oi]
-        color = palette[oi % len(palette)]
-
-        draw.line((root_x, root_y - 55, ox, 570), fill=color, width=8)
-        draw.ellipse((ox - 16, 548, ox + 16, 580), fill=color)
-
-        option_box = (ox - 190, 440, ox + 190, 545)
-        draw_card(
-            draw,
-            option_box,
-            option["name"],
-            f"Итоговая оценка: {option['score']:.2f}",
-            fill="#FFFFFF",
-            outline=color,
+        color = colors[oi % len(colors)]
+        content.append(
+            f'<path d="M {root_x} {root_y - 60} C {root_x} {root_y - 150}, '
+            f'{ox} {option_y + 110}, {ox} {option_y + 45}" '
+            f'fill="none" stroke="{color}" stroke-width="7"/>'
         )
 
         scenarios = option["scenarios"]
-        n = len(scenarios)
-        spacing = min(320, 700 // max(n, 1))
-        start_x = ox - (n - 1) * spacing // 2
+        spacing = min(300, 700 / max(1, len(scenarios)))
+        start_x = ox - (len(scenarios) - 1) * spacing / 2
 
         for si, scenario in enumerate(scenarios):
             sx = start_x + si * spacing
-            draw.line((ox, 440, sx, 285), fill=color, width=5)
-            draw.ellipse((sx - 13, 270, sx + 13, 296), fill=color)
-
-            body = (
+            content.append(
+                f'<path d="M {ox} {option_y - 25} C {ox} {option_y - 100}, '
+                f'{sx} {scenario_y + 160}, {sx} {scenario_y + 100}" '
+                f'fill="none" stroke="{color}" stroke-width="4"/>'
+            )
+            content.append(
+                f'<circle cx="{sx}" cy="{scenario_y + 90}" r="12" fill="{color}"/>'
+            )
+            scenario_body = (
                 f"{scenario['name']}\n"
                 f"{option['normalized'][si]:.1f}% · оценка {scenario['score']:g}"
             )
-            scenario_box = (sx - 145, 130, sx + 145, 260)
-            draw_card(
-                draw,
-                scenario_box,
-                f"Исход {si + 1}",
-                body,
-                fill="#FFFFFF",
-                outline=color,
+            content.append(
+                svg_card(sx - 135, scenario_y - 5, 270, 105,
+                         f"Исход {si + 1}", scenario_body, "#FFFFFF", color)
             )
 
-    draw.text(
-        (width // 2, 965),
-        "Схема помогает обсуждению и не является автоматической рекомендацией.",
-        font=load_font(16),
-        fill="#648198",
-        anchor="mm",
-    )
-    return png_bytes(image)
+        content.append(
+            f'<circle cx="{ox}" cy="{option_y}" r="14" fill="{color}" stroke="white" stroke-width="4"/>'
+        )
+        content.append(
+            svg_card(
+                ox - 160, option_y + 25, 320, 100,
+                option["name"],
+                f"Итоговая оценка: {option['score']:.2f}",
+                "#FFFFFF", color,
+            )
+        )
 
-
-def make_act_png(situation, values, away_actions, inner, toward_actions, toward_inner, next_step):
-    width, height = 1400, 1100
-    image = Image.new("RGB", (width, height), "#F5FAFE")
-    draw = ImageDraw.Draw(image)
-
-    draw.text(
-        (width // 2, 45),
-        "ACT-матрица",
-        font=load_font(36, bold=True),
-        fill="#294A65",
-        anchor="mm",
-    )
-    draw.text(
-        (width // 2, 100),
-        f"Ситуация: {wrap_text(situation, 95)}",
-        font=load_font(18),
-        fill="#476B85",
-        anchor="mm",
-    )
-    draw.text(
-        (width // 2, 145),
-        f"Что важно: {wrap_text(values, 95)}",
-        font=load_font(18),
-        fill="#476B85",
-        anchor="mm",
+    content.append(
+        svg_card(root_x - 230, root_y - 55, 460, 110, "Решение", question, "#E4F2FA", "#78A9C9")
     )
 
-    draw.line((width // 2, 200, width // 2, 900), fill="#9DBBD0", width=5)
-    draw.line((100, 550, width - 100, 550), fill="#9DBBD0", width=5)
+    return svg_document("Дерево решений", "".join(content), width, height)
 
-    draw_card(
-        draw, (100, 220, 660, 520),
-        "Действия «от дискомфорта»", away_actions,
-        fill="#FFF1F1", outline="#D9A6A6",
+
+def make_vertical_svg(title, sections, note):
+    width = 1100
+    card_height = 115
+    gap = 45
+    top = 95
+    height = max(550, top + len(sections) * (card_height + gap) + 90)
+    content = []
+
+    for index, (heading, body) in enumerate(sections):
+        y = top + index * (card_height + gap)
+        fill = "#E8F4FB" if index % 2 == 0 else "#F2F8FC"
+
+        content.append(
+            svg_card(115, y, 870, card_height, heading, body, fill, "#AFCFE2")
+        )
+
+        if index < len(sections) - 1:
+            content.append(
+                f'<path d="M 550 {y + card_height} L 550 {y + card_height + gap - 4}" '
+                'stroke="#6EA7CB" stroke-width="4" fill="none"/>'
+            )
+            content.append(
+                f'<path d="M 540 {y + card_height + gap - 15} L 550 {y + card_height + gap - 4} '
+                f'L 560 {y + card_height + gap - 15}" fill="none" stroke="#6EA7CB" stroke-width="4"/>'
+            )
+
+    content.append(
+        f'<text x="550" y="{height - 28}" text-anchor="middle" '
+        f'font-family="Arial, sans-serif" font-size="14" fill="#54718A">'
+        f'{svg_escape(note)}</text>'
     )
-    draw_card(
-        draw, (740, 220, 1300, 520),
-        "Действия «к важному»", toward_actions,
-        fill="#EAF7F1", outline="#9FC9B4",
+    return svg_document(title, "".join(content), width, height)
+
+
+def make_act_svg(situation, values, away_actions, inner, toward_actions, toward_inner, next_step):
+    width, height = 1200, 930
+    content = []
+
+    content.append(
+        svg_multiline(f"Ситуация: {situation or '—'}", 600, 88, 90, 16, "#476B85", max_lines=2)
     )
-    draw_card(
-        draw, (100, 590, 660, 890),
-        "Внутренний опыт", inner,
-        fill="#F2F5FC", outline="#B6C5DE",
-    )
-    draw_card(
-        draw, (740, 590, 1300, 890),
-        "Внутренний опыт при движении к важному", toward_inner,
-        fill="#EFF8FC", outline="#AFCFE2",
+    content.append(
+        svg_multiline(f"Что важно: {values or '—'}", 600, 128, 90, 16, "#476B85", max_lines=2)
     )
 
-    draw.text(
-        (width // 2, 970),
-        f"Небольшой выбранный шаг: {wrap_text(next_step, 90)}",
-        font=load_font(19, bold=True),
-        fill="#315773",
-        anchor="mm",
-    )
-    draw.text(
-        (width // 2, 1040),
-        "Карта для совместного исследования, а не диагноз или оценка.",
-        font=load_font(16),
-        fill="#648198",
-        anchor="mm",
+    content.append('<line x1="600" y1="170" x2="600" y2="760" stroke="#8DB6D0" stroke-width="5"/>')
+    content.append('<line x1="70" y1="465" x2="1130" y2="465" stroke="#8DB6D0" stroke-width="5"/>')
+
+    content.append(svg_card(85, 195, 480, 235, "Действия «от дискомфорта»", away_actions, "#EAF5FC", "#8DB6D0"))
+    content.append(svg_card(635, 195, 480, 235, "Действия «к важному»", toward_actions, "#E4F3FA", "#78A9C9"))
+    content.append(svg_card(85, 500, 480, 235, "Внутренний опыт", inner, "#EEF6FB", "#A5C6DA"))
+    content.append(svg_card(635, 500, 480, 235, "Внутренний опыт при движении к важному", toward_inner, "#E8F4FB", "#8DB6D0"))
+
+    content.append(
+        svg_multiline(
+            f"Небольшой выбранный шаг: {next_step or '—'}",
+            600, 815, 90, 17, "#315773", max_lines=3,
+        )
     )
 
-    return png_bytes(image)
+    return svg_document("ACT-матрица", "".join(content), width, height)
 
 
 # ---------------------------------------------------------------------
-# Дерево решений
+# Дерево решений: данные и интерфейс
 # ---------------------------------------------------------------------
 
 def new_scenario(first=False):
-    return {
-        "id": uuid.uuid4().hex,
-        "default_probability": 100 if first else 0,
-    }
+    return {"id": uuid.uuid4().hex, "default_probability": 100 if first else 0}
 
 
 def new_option():
-    return {
-        "id": uuid.uuid4().hex,
-        "scenarios": [new_scenario(first=True)],
-    }
+    return {"id": uuid.uuid4().hex, "scenarios": [new_scenario(first=True)]}
 
 
 def initialize_decision_tree():
@@ -590,8 +794,8 @@ def delete_option(option_id):
     if len(st.session_state.dt_options) <= 2:
         return
     st.session_state.dt_options = [
-        item for item in st.session_state.dt_options
-        if item["id"] != option_id
+        option for option in st.session_state.dt_options
+        if option["id"] != option_id
     ]
     clear_decision_result()
 
@@ -601,18 +805,18 @@ def add_scenario(option_id):
         if option["id"] == option_id:
             option["scenarios"].append(new_scenario())
             clear_decision_result()
-            break
+            return
 
 
 def delete_scenario(option_id, scenario_id):
     for option in st.session_state.dt_options:
         if option["id"] == option_id and len(option["scenarios"]) > 1:
             option["scenarios"] = [
-                item for item in option["scenarios"]
-                if item["id"] != scenario_id
+                scenario for scenario in option["scenarios"]
+                if scenario["id"] != scenario_id
             ]
             clear_decision_result()
-            break
+            return
 
 
 def render_decision_tree():
@@ -672,10 +876,10 @@ def render_decision_tree():
                     st.session_state[score_state_key] = 0.0
 
                 with st.container(border=True):
-                    scenario_title_col, scenario_delete_col = st.columns([5, 1.5])
-                    with scenario_title_col:
+                    title_col2, delete_col2 = st.columns([5, 1.5])
+                    with title_col2:
                         st.markdown(f"**Сценарий {scenario_index}**")
-                    with scenario_delete_col:
+                    with delete_col2:
                         st.button(
                             "Удалить сценарий",
                             key=f"dt_delete_scenario_{scenario_id}",
@@ -692,8 +896,8 @@ def render_decision_tree():
                         on_change=clear_decision_result,
                     )
 
-                    probability_col, score_col = st.columns(2)
-                    with probability_col:
+                    c1, c2 = st.columns(2)
+                    with c1:
                         st.slider(
                             "Вероятность, %",
                             min_value=0,
@@ -702,7 +906,7 @@ def render_decision_tree():
                             key=probability_state_key,
                             on_change=clear_decision_result,
                         )
-                    with score_col:
+                    with c2:
                         st.slider(
                             "Оценка исхода",
                             min_value=-5.0,
@@ -721,7 +925,6 @@ def render_decision_tree():
             )
 
     add_col, remove_col, _ = st.columns([1.7, 1.9, 4])
-
     with add_col:
         st.button(
             "＋ Добавить вариант",
@@ -729,7 +932,6 @@ def render_decision_tree():
             on_click=add_option,
             use_container_width=True,
         )
-
     with remove_col:
         st.button(
             "− Удалить последний",
@@ -740,13 +942,9 @@ def render_decision_tree():
             use_container_width=True,
         )
 
-    if st.button(
-        "Рассчитать и построить дерево",
-        type="primary",
-        use_container_width=True,
-    ):
+    if st.button("Рассчитать и построить дерево", type="primary", use_container_width=True):
         question = st.session_state.dt_question.strip()
-        prepared_options = []
+        prepared = []
         used_names = set()
         error = None
 
@@ -757,76 +955,59 @@ def render_decision_tree():
             if error:
                 break
 
-            option_name = st.session_state.get(
-                option_name_key(option["id"]), ""
-            ).strip()
-
-            if not option_name:
+            name = st.session_state.get(option_name_key(option["id"]), "").strip()
+            if not name:
                 error = f"Введите название варианта {option_index}."
                 break
-
-            if option_name in used_names:
-                error = f"Названия вариантов должны отличаться: «{option_name}»."
+            if name in used_names:
+                error = f"Названия вариантов должны отличаться: «{name}»."
                 break
+            used_names.add(name)
 
-            used_names.add(option_name)
             scenarios = []
-
             for scenario_index, scenario in enumerate(option["scenarios"], start=1):
-                scenario_id = scenario["id"]
-                scenario_name = st.session_state.get(
-                    scenario_name_key(scenario_id), ""
-                ).strip()
+                sid = scenario["id"]
+                scenario_name = st.session_state.get(scenario_name_key(sid), "").strip()
 
                 if not scenario_name:
-                    error = (
-                        f"Заполните сценарий {scenario_index} "
-                        f"варианта «{option_name}»."
-                    )
+                    error = f"Заполните сценарий {scenario_index} варианта «{name}»."
                     break
 
                 scenarios.append({
                     "name": scenario_name,
-                    "probability": int(st.session_state[probability_key(scenario_id)]),
-                    "score": float(st.session_state[score_key(scenario_id)]),
+                    "probability": int(st.session_state[probability_key(sid)]),
+                    "score": float(st.session_state[score_key(sid)]),
                 })
 
             if error:
                 break
 
-            total_probability = sum(item["probability"] for item in scenarios)
-            if total_probability == 0:
-                error = f"Для варианта «{option_name}» задайте ненулевую вероятность."
+            total = sum(item["probability"] for item in scenarios)
+            if total == 0:
+                error = f"Для варианта «{name}» задайте ненулевую вероятность."
                 break
 
-            normalized = [
-                item["probability"] / total_probability * 100
-                for item in scenarios
-            ]
-            expected_score = sum(
-                normalized[index] / 100 * scenario["score"]
-                for index, scenario in enumerate(scenarios)
+            normalized = [item["probability"] / total * 100 for item in scenarios]
+            expected = sum(
+                normalized[index] / 100 * item["score"]
+                for index, item in enumerate(scenarios)
             )
 
-            prepared_options.append({
-                "name": option_name,
+            prepared.append({
+                "name": name,
                 "scenarios": scenarios,
                 "normalized": normalized,
-                "score": expected_score,
+                "score": expected,
             })
 
         if error:
             st.session_state.dt_result = None
             st.warning(error)
         else:
-            best_name = max(
-                prepared_options,
-                key=lambda item: item["score"],
-            )["name"]
-
+            best_name = max(prepared, key=lambda item: item["score"])["name"]
             st.session_state.dt_result = {
                 "question": question,
-                "options": prepared_options,
+                "options": prepared,
                 "best_name": best_name,
             }
 
@@ -838,27 +1019,19 @@ def render_decision_tree():
 
         for column, option in zip(columns, result["options"]):
             with column:
-                label = (
-                    "🌿 " if option["name"] == result["best_name"] else ""
-                ) + option["name"]
-                st.metric(label=label, value=f"{option['score']:.2f} / 5")
+                prefix = "🌿 " if option["name"] == result["best_name"] else ""
+                st.metric(
+                    label=prefix + option["name"],
+                    value=f"{option['score']:.2f} / 5",
+                )
 
         st.info(
             f"По указанным оценкам лидирует вариант: **{result['best_name']}**. "
             "Это материал для размышления, а не автоматическое решение."
         )
 
-        image_data = make_decision_png(
-            result["question"],
-            result["options"],
-        )
-        st.image(image_data, use_container_width=True)
-        download_png(
-            "⬇️ Скачать дерево решений в PNG",
-            image_data,
-            "derevo-resheniy.png",
-            "download_decision_png",
-        )
+        svg = make_decision_svg(result["question"], result["options"])
+        render_interactive_diagram(svg, "derevo_resheniy", height=720)
 
 
 # ---------------------------------------------------------------------
@@ -903,19 +1076,15 @@ def render_chain():
         placeholder="Что произошло непосредственно перед поведением? Опишите факты.",
     )
 
-    sections = [
-        ("Факторы уязвимости", vulnerability),
-        ("Запускающее событие", prompting),
-    ]
-
     st.subheader("Звенья цепочки")
+    link_data = []
 
     for index, link in enumerate(list(st.session_state.chain_links), start=1):
         link_id = link["id"]
 
         with st.container(border=True):
-            title_col, delete_col = st.columns([5, 1.5])
-            with title_col:
+            header, delete_col = st.columns([5, 1.5])
+            with header:
                 st.markdown(f"**Звено {index}**")
             with delete_col:
                 st.button(
@@ -942,12 +1111,10 @@ def render_chain():
                 value=0,
                 key=f"chain_intensity_{link_id}",
             )
-
             intervention = st.checkbox(
                 "Отметить как возможную точку вмешательства",
                 key=f"chain_intervention_{link_id}",
             )
-
             skill = st.text_area(
                 "Возможный другой шаг, навык или поддержка",
                 key=f"chain_skill_{link_id}",
@@ -963,13 +1130,12 @@ def render_chain():
             ]
             if value.strip()
         )
-
         if intervention:
             description += "\nВозможная точка вмешательства"
         if skill.strip():
             description += f"\nВозможная поддержка: {skill}"
 
-        sections.append((f"Звено {index}", description))
+        link_data.append((f"Звено {index}", description))
 
     st.button("＋ Добавить звено", on_click=add_chain_link)
 
@@ -982,34 +1148,29 @@ def render_chain():
     with right:
         later = st.text_area("Последствия позднее", key="chain_later")
 
-    repair = st.text_area(
-        "Восстановление ситуации или поддержка",
-        key="chain_repair",
-    )
+    repair = st.text_area("Восстановление ситуации или поддержка", key="chain_repair")
 
-    sections.extend([
+    sections = [
+        ("Факторы уязвимости", vulnerability),
+        ("Запускающее событие", prompting),
+        *link_data,
         ("Целевое поведение", target),
         ("Последствия сразу после", immediate),
         ("Последствия позднее", later),
         ("Восстановление / поддержка", repair),
-    ])
+    ]
 
     with st.expander("Показать сводную карту", expanded=True):
         for heading, body in sections:
             st.markdown(f"**{heading}**")
             st.write(body or "—")
 
-    image_data = make_vertical_png(
+    svg = make_vertical_svg(
         "Цепочный анализ поведения",
         sections,
         "Карта для обсуждения, а не диагноз или автоматическая оценка.",
     )
-    download_png(
-        "⬇️ Скачать карту цепочки в PNG",
-        image_data,
-        "cepochniy-analiz.png",
-        "download_chain_png",
-    )
+    render_interactive_diagram(svg, "cepochnyy_analiz", height=720)
 
 
 # ---------------------------------------------------------------------
@@ -1054,8 +1215,8 @@ def render_exposure():
         step_id = step["id"]
 
         with st.container(border=True):
-            title_col, delete_col = st.columns([5, 1.5])
-            with title_col:
+            header, delete_col = st.columns([5, 1.5])
+            with header:
                 st.markdown(f"**Ступень {index}**")
             with delete_col:
                 st.button(
@@ -1101,7 +1262,6 @@ def render_exposure():
 
     ordered = sorted(records, key=lambda item: (item["distress"], item["index"]))
     sections = [("Цель", goal)]
-
     st.subheader("Лестница по ожидаемой тревоге")
 
     for position, item in enumerate(ordered, start=1):
@@ -1114,7 +1274,6 @@ def render_exposure():
                 f"ожидаемая тревога: **{item['distress']}/10**"
             )
             st.caption(f"Статус: {item['status']}")
-
             if item["prediction"]:
                 st.write(f"**Прогноз:** {item['prediction']}")
             if item["plan"]:
@@ -1132,87 +1291,17 @@ def render_exposure():
             ]),
         ))
 
-    image_data = make_vertical_png(
+    svg = make_vertical_svg(
         "Иерархия экспозиции",
         sections,
-        "Порядок ступеней — материал для обсуждения, не автоматическое назначение.",
+        "Порядок ступеней — материал для обсуждения, а не автоматическое назначение.",
     )
-    download_png(
-        "⬇️ Скачать иерархию в PNG",
-        image_data,
-        "ierarhiya-ekspozicii.png",
-        "download_exposure_png",
-    )
+    render_interactive_diagram(svg, "ierarhiya_ekspozicii", height=720)
 
 
 # ---------------------------------------------------------------------
 # ACT-матрица
 # ---------------------------------------------------------------------
-
-def make_act_png(situation, values, away_actions, inner, toward_actions, toward_inner, next_step):
-    width, height = 1400, 1120
-    image = Image.new("RGB", (width, height), "#F5FAFE")
-    draw = ImageDraw.Draw(image)
-
-    draw.text(
-        (width // 2, 45),
-        "ACT-матрица",
-        font=load_font(36, bold=True),
-        fill="#294A65",
-        anchor="mm",
-    )
-
-    draw_centered_text(
-        draw, f"Ситуация: {situation or '—'}", (width // 2, 100),
-        load_font(18), "#476B85", max_chars=100,
-    )
-    draw_centered_text(
-        draw, f"Что важно: {values or '—'}", (width // 2, 155),
-        load_font(18), "#476B85", max_chars=100,
-    )
-
-    draw.line((width // 2, 220, width // 2, 900), fill="#9DBBD0", width=5)
-    draw.line((100, 560, width - 100, 560), fill="#9DBBD0", width=5)
-
-    draw_card(
-        draw, (100, 240, 660, 520),
-        "Действия «от дискомфорта»", away_actions,
-        fill="#FFF1F1", outline="#D9A6A6",
-    )
-    draw_card(
-        draw, (740, 240, 1300, 520),
-        "Действия «к важному»", toward_actions,
-        fill="#EAF7F1", outline="#9FC9B4",
-    )
-    draw_card(
-        draw, (100, 600, 660, 880),
-        "Внутренний опыт", inner,
-        fill="#F2F5FC", outline="#B6C5DE",
-    )
-    draw_card(
-        draw, (740, 600, 1300, 880),
-        "Внутренний опыт при движении к важному", toward_inner,
-        fill="#EFF8FC", outline="#AFCFE2",
-    )
-
-    draw_centered_text(
-        draw,
-        f"Небольшой выбранный шаг: {next_step or '—'}",
-        (width // 2, 970),
-        load_font(19, bold=True),
-        "#315773",
-        max_chars=100,
-    )
-    draw.text(
-        (width // 2, 1060),
-        "Карта для совместного исследования, а не диагноз или оценка.",
-        font=load_font(16),
-        fill="#648198",
-        anchor="mm",
-    )
-
-    return png_bytes(image)
-
 
 def render_act_matrix():
     st.title("🧭 ACT-матрица")
@@ -1271,7 +1360,7 @@ def render_act_matrix():
         placeholder="Какой шаг вы сами хотели бы попробовать?",
     )
 
-    image_data = make_act_png(
+    svg = make_act_svg(
         situation,
         values,
         away_actions,
@@ -1281,18 +1370,12 @@ def render_act_matrix():
         next_step,
     )
 
-    st.subheader("Предварительный вид карты")
-    st.image(image_data, use_container_width=True)
-    download_png(
-        "⬇️ Скачать ACT-матрицу в PNG",
-        image_data,
-        "act-matrix.png",
-        "download_act_png",
-    )
+    st.subheader("Матрица")
+    render_interactive_diagram(svg, "act_matrix", height=760)
 
 
 # ---------------------------------------------------------------------
-# Главная, библиотека и раздел «О нас»
+# Главная, библиотека и «О нас»
 # ---------------------------------------------------------------------
 
 def render_home():
@@ -1306,10 +1389,10 @@ def render_home():
             padding:42px 25px;
             margin:20px 0 26px 0;
             box-sizing:border-box;
-            border:1px solid #C9E0EF;
+            border:1px solid #BBD9EC;
             border-radius:30px;
             background-color:rgba(232,245,253,.94);
-            background-image:url('data:image/svg+xml;base64,{__import__('base64').b64encode(NEURON_PATTERN.encode('utf-8')).decode('ascii')}');
+            background-image:url('data:image/svg+xml,{__import__("urllib.parse").parse.quote(NEURON_SVG)}');
             background-size:cover;
             box-shadow:0 18px 42px rgba(48,105,145,.12);
             text-align:center;
@@ -1318,7 +1401,7 @@ def render_home():
               max-width:820px;
               padding:24px;
               border-radius:24px;
-              background:rgba(248,252,255,.88);
+              background:rgba(248,252,255,.91);
               box-shadow:0 8px 26px rgba(48,105,145,.07);
           ">
             <div style="
@@ -1348,7 +1431,6 @@ def render_home():
     )
 
     left, right = st.columns(2)
-
     with left:
         st.button(
             "📚  Библиотека техник",
@@ -1356,7 +1438,6 @@ def render_home():
             use_container_width=True,
             on_click=go_library,
         )
-
     with right:
         st.button(
             "ℹ️  О нас",
@@ -1379,7 +1460,6 @@ def render_library():
     st.write("Выберите инструмент, который хотите открыть.")
 
     items = list(TECHNIQUES.items())
-
     for start in range(0, len(items), 2):
         columns = st.columns(2)
 
@@ -1416,25 +1496,12 @@ def render_about():
     st.subheader("Команда разработчиков")
 
     developers = [
-        {
-            "name": "Имя Фамилия",
-            "role": "Роль в проекте",
-            "photo": "assets/developer1.jpg",
-        },
-        {
-            "name": "Имя Фамилия",
-            "role": "Роль в проекте",
-            "photo": "assets/developer2.jpg",
-        },
-        {
-            "name": "Имя Фамилия",
-            "role": "Роль в проекте",
-            "photo": "assets/developer3.jpg",
-        },
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer1.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer2.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer3.jpg"},
     ]
 
     columns = st.columns(3)
-
     for column, person in zip(columns, developers):
         with column:
             with st.container(border=True):
@@ -1451,7 +1518,7 @@ def render_about():
                             align-items:center;
                             justify-content:center;
                             border-radius:14px;
-                            background:linear-gradient(135deg,#E3F2FB,#F4FAFE);
+                            background:linear-gradient(135deg,#DDEFFA,#F2F8FC);
                             font-size:4rem;">
                             👤
                         </div>
@@ -1466,9 +1533,9 @@ def render_about():
                 )
 
     st.divider()
-    st.warning(
+    st.info(
         "Это прототип. Не вводите идентифицирующие или особо чувствительные "
-        "сведения: защищённое хранение клиентских данных пока не реализовано."
+        "сведения: защищённое хранение клиентских данных не реализовано."
     )
 
 
@@ -1494,7 +1561,7 @@ def render_selected_technique():
 
 
 # ---------------------------------------------------------------------
-# Запуск
+# Основной запуск
 # ---------------------------------------------------------------------
 
 render_navigation()
