@@ -1,17 +1,15 @@
-from io import BytesIO
-from pathlib import Path
+import base64
 import html
 import textwrap
 import uuid
+from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-
-import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch
 import streamlit as st
-import streamlit.components.v1 as components
 
+
+# ---------------------------------------------------------------------
+# Настройки страницы
+# ---------------------------------------------------------------------
 
 st.set_page_config(
     page_title="ПСИ-БЛОК",
@@ -20,13 +18,13 @@ st.set_page_config(
 )
 
 
-# -------------------------------------------------------------------
-# Декоративный фон: полупрозрачная нейронная сеть по всему экрану
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Декоративный фон с полупрозрачными нейронами
+# ---------------------------------------------------------------------
 
-NEURON_BACKGROUND = """
+NEURON_SVG = """
 <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800">
-  <g fill="none" stroke="#4389B5" stroke-opacity="0.11" stroke-width="2">
+  <g fill="none" stroke="#4389B5" stroke-opacity="0.13" stroke-width="2">
     <path d="M25 92 L130 145 L225 80 L340 150 L455 70 L565 145 L690 86 L815 155 L955 82"/>
     <path d="M130 145 L175 290 L300 340 L420 250 L565 145"/>
     <path d="M225 80 L245 20"/>
@@ -43,7 +41,7 @@ NEURON_BACKGROUND = """
     <path d="M840 500 L815 650 L930 735"/>
     <path d="M310 635 L390 760"/>
   </g>
-  <g fill="#4389B5" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="3">
+  <g fill="#4389B5" fill-opacity="0.18" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="3">
     <circle cx="25" cy="92" r="8"/><circle cx="130" cy="145" r="12"/>
     <circle cx="225" cy="80" r="9"/><circle cx="340" cy="150" r="12"/>
     <circle cx="455" cy="70" r="8"/><circle cx="565" cy="145" r="11"/>
@@ -61,16 +59,14 @@ NEURON_BACKGROUND = """
 </svg>
 """
 
-import base64
-
-NEURON_BACKGROUND_B64 = base64.b64encode(
-    NEURON_BACKGROUND.encode("utf-8")
+NEURON_BACKGROUND = base64.b64encode(
+    NEURON_SVG.encode("utf-8")
 ).decode("ascii")
 
 
-# -------------------------------------------------------------------
-# Стили
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Дизайн
+# ---------------------------------------------------------------------
 
 st.markdown(
     f"""
@@ -78,37 +74,25 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
 
     .stApp {{
-        background:
+        background-color: #F3F9FD;
+        background-image:
             radial-gradient(ellipse at 10% 5%, rgba(196, 228, 248, .62), transparent 34%),
-            radial-gradient(ellipse at 92% 18%, rgba(219, 239, 251, .70), transparent 36%),
-            linear-gradient(145deg, #F5FAFE 0%, #EDF6FC 52%, #F8FBFE 100%);
+            radial-gradient(ellipse at 92% 18%, rgba(219, 239, 251, .72), transparent 36%),
+            url("data:image/svg+xml;base64,{NEURON_BACKGROUND}");
+        background-size: auto, auto, 1000px 800px;
+        background-position: center, center, left top;
+        background-repeat: no-repeat, no-repeat, repeat;
+        background-attachment: fixed, fixed, fixed;
         color: #294A65;
-    }}
-
-    .stApp::before {{
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        opacity: 0.72;
-        background-image: url("data:image/svg+xml;base64,{NEURON_BACKGROUND_B64}");
-        background-size: 1000px 800px;
-        background-repeat: repeat;
     }}
 
     [data-testid="stHeader"] {{
         background: transparent;
     }}
 
-    [data-testid="stAppViewContainer"] > .main {{
-        position: relative;
-        z-index: 1;
-    }}
-
     .block-container {{
         max-width: 1120px;
-        padding-top: 1.4rem;
+        padding-top: 1.2rem;
         padding-bottom: 4rem;
     }}
 
@@ -121,7 +105,7 @@ st.markdown(
         letter-spacing: -0.025em;
     }}
 
-    h1 {{ font-size: 2.65rem !important; font-weight: 800 !important; }}
+    h1 {{ font-size: 2.6rem !important; font-weight: 800 !important; }}
     h2 {{ font-size: 1.85rem !important; font-weight: 800 !important; }}
     h3 {{ font-size: 1.3rem !important; font-weight: 800 !important; }}
 
@@ -132,7 +116,7 @@ st.markdown(
     [data-testid="stVerticalBlockBorderWrapper"] {{
         border: 1px solid #D4E5F1 !important;
         border-radius: 20px !important;
-        background: rgba(255,255,255,0.92) !important;
+        background: rgba(255,255,255,0.93) !important;
         box-shadow: 0 10px 26px rgba(62, 112, 148, 0.08);
     }}
 
@@ -198,25 +182,6 @@ st.markdown(
         border-color: #D4E5F1;
     }}
 
-    .hero-title {{
-        color: #214D6C;
-        font-family: "Nunito Sans", "Segoe UI", sans-serif;
-        font-size: clamp(3.8rem, 9vw, 6.7rem);
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: .035em;
-        text-shadow: 0 3px 14px rgba(255,255,255,.75);
-    }}
-
-    .hero-subtitle {{
-        max-width: 760px;
-        margin: 20px auto 0 auto;
-        color: #476B85;
-        font-family: "Nunito Sans", "Segoe UI", sans-serif;
-        font-size: 1.2rem;
-        line-height: 1.7;
-    }}
-
     .developer-name {{
         margin-top: 12px;
         color: #294A65;
@@ -235,9 +200,77 @@ st.markdown(
 )
 
 
-# -------------------------------------------------------------------
-# Навигация и каталог
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Общие функции
+# ---------------------------------------------------------------------
+
+def escape_text(value):
+    return html.escape(str(value or ""))
+
+
+def svg_text_lines(text, x, y, max_chars=24, font_size=13, color="#294A65"):
+    """Создаёт SVG text с переносами строк."""
+    text = str(text or "").strip()
+    if not text:
+        text = "—"
+
+    lines = textwrap.wrap(text, width=max_chars) or ["—"]
+    lines = lines[:4]
+
+    spans = []
+    for index, line in enumerate(lines):
+        dy = "0" if index == 0 else str(font_size + 4)
+        spans.append(
+            f'<tspan x="{x}" dy="{dy}">{escape_text(line)}</tspan>'
+        )
+
+    return (
+        f'<text x="{x}" y="{y}" text-anchor="middle" '
+        f'font-family="Arial, sans-serif" font-size="{font_size}" '
+        f'fill="{color}">{"".join(spans)}</text>'
+    )
+
+
+def svg_card(x, y, width, height, title, body, fill="#FFFFFF", stroke="#B8D5E7"):
+    title_y = y + 27
+    body_y = y + 52
+    return f"""
+    <rect x="{x}" y="{y}" width="{width}" height="{height}" rx="16"
+          fill="{fill}" stroke="{stroke}" stroke-width="2"/>
+    <text x="{x + width / 2}" y="{title_y}" text-anchor="middle"
+          font-family="Arial, sans-serif" font-size="14"
+          font-weight="bold" fill="#294A65">{escape_text(title)}</text>
+    {svg_text_lines(body, x + width / 2, body_y, max_chars=max(12, int(width / 8)), font_size=12)}
+    """
+
+
+def svg_document(title, content, width=1000, height=700):
+    return f"""
+    <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}"
+         viewBox="0 0 {width} {height}">
+      <rect width="100%" height="100%" rx="24" fill="#F5FAFE"/>
+      <text x="{width / 2}" y="42" text-anchor="middle"
+            font-family="Arial, sans-serif" font-size="25"
+            font-weight="bold" fill="#294A65">{escape_text(title)}</text>
+      {content}
+    </svg>
+    """
+
+
+def download_svg(label, svg, filename, key):
+    st.download_button(
+        label=label,
+        data=svg.encode("utf-8"),
+        file_name=filename,
+        mime="image/svg+xml",
+        key=key,
+        use_container_width=True,
+    )
+
+
+# ---------------------------------------------------------------------
+# Каталог и навигация
+# ---------------------------------------------------------------------
 
 TECHNIQUES = {
     "decision_tree": {
@@ -291,7 +324,7 @@ def open_technique(technique_id):
 
 
 def render_navigation():
-    home_col, library_col, spacer = st.columns([1.2, 1.2, 5])
+    home_col, library_col, _ = st.columns([1.2, 1.2, 5])
 
     with home_col:
         st.button("⌂ Главная", on_click=go_home, use_container_width=True)
@@ -300,301 +333,163 @@ def render_navigation():
         st.button("Библиотека", on_click=go_library, use_container_width=True)
 
 
-def safe_text(value):
-    return html.escape(str(value))
+# ---------------------------------------------------------------------
+# Скачиваемые карты SVG
+# ---------------------------------------------------------------------
 
+def make_decision_svg(question, options):
+    width = max(1000, len(options) * 370)
+    height = 720
+    content = []
 
-# -------------------------------------------------------------------
-# Графики для PNG-экспорта
-# -------------------------------------------------------------------
-
-def fig_to_png(fig):
-    output = BytesIO()
-    fig.savefig(
-        output,
-        format="png",
-        dpi=180,
-        bbox_inches="tight",
-        facecolor="#F7FBFE",
+    root_x = width / 2
+    root_y = 620
+    content.append(
+        f'<line x1="{root_x}" y1="565" x2="{root_x}" y2="{root_y}" '
+        'stroke="#B98D6C" stroke-width="10" stroke-linecap="round"/>'
     )
-    plt.close(fig)
-    output.seek(0)
-    return output.getvalue()
+    content.append(svg_card(root_x - 190, 555, 380, 85, "Решение", question, "#F4E2D2", "#D8A77E"))
 
-
-def wrap_for_plot(text, width=28):
-    text = str(text or "").strip()
-    if not text:
-        return "—"
-    return "\n".join(textwrap.wrap(text, width=width))
-
-
-def draw_box(ax, x, y, width, height, title, body, color="#EAF5FB"):
-    box = FancyBboxPatch(
-        (x, y),
-        width,
-        height,
-        boxstyle="round,pad=0.02,rounding_size=0.04",
-        linewidth=1.5,
-        edgecolor="#8BB9D5",
-        facecolor=color,
-    )
-    ax.add_patch(box)
-    ax.text(
-        x + width / 2,
-        y + height * 0.70,
-        title,
-        ha="center",
-        va="center",
-        fontsize=11,
-        fontweight="bold",
-        color="#294A65",
-        wrap=True,
-    )
-    ax.text(
-        x + width / 2,
-        y + height * 0.34,
-        wrap_for_plot(body, 25),
-        ha="center",
-        va="center",
-        fontsize=9,
-        color="#476B85",
-        wrap=True,
-    )
-
-
-def make_decision_png(question, options):
-    count = max(1, sum(len(option["scenarios"]) for option in options))
-    width = max(9, min(18, 3.2 * count))
-    fig, ax = plt.subplots(figsize=(width, 7))
-    ax.set_facecolor("#F7FBFE")
-    ax.axis("off")
-
-    ax.text(
-        0.5, 0.97, "Дерево решений",
-        transform=ax.transAxes,
-        ha="center", va="top",
-        fontsize=20, fontweight="bold", color="#294A65",
-    )
-    ax.text(
-        0.5, 0.90, wrap_for_plot(question, 75),
-        transform=ax.transAxes,
-        ha="center", va="top",
-        fontsize=12, color="#476B85",
-    )
-
-    option_xs = [(i + 1) / (len(options) + 1) for i in range(len(options))]
-    root_x = 0.5
-    root_y = 0.74
-
-    ax.scatter([root_x], [root_y], s=250, color="#C99A73", zorder=3)
-    ax.text(
-        root_x, root_y - 0.06, "Решение",
-        ha="center", va="top", fontsize=9, color="#604B3D",
-    )
-
+    option_xs = [
+        width * (index + 1) / (len(options) + 1)
+        for index in range(len(options))
+    ]
     palette = ["#80BFE0", "#71BFA9", "#E1AE83", "#A99BD0", "#D99BB2"]
-    leaf_positions = []
 
-    for option_index, option in enumerate(options):
-        ox = option_xs[option_index]
-        color = palette[option_index % len(palette)]
-        ax.plot([root_x, ox], [root_y, 0.52], color=color, linewidth=3, zorder=1)
-        ax.scatter([ox], [0.52], s=180, color=color, zorder=3)
-        ax.text(
-            ox, 0.47,
-            wrap_for_plot(option["name"], 20),
-            ha="center", va="top", fontsize=10,
-            fontweight="bold", color="#294A65",
+    for oi, option in enumerate(options):
+        ox = option_xs[oi]
+        color = palette[oi % len(palette)]
+        content.append(
+            f'<line x1="{root_x}" y1="555" x2="{ox}" y2="430" '
+            f'stroke="{color}" stroke-width="6" stroke-linecap="round"/>'
         )
-        ax.text(
-            ox, 0.40,
-            f"Оценка: {option['score']:.2f}",
-            ha="center", va="top", fontsize=8, color="#54718A",
+        content.append(
+            f'<circle cx="{ox}" cy="430" r="14" fill="{color}" stroke="white" stroke-width="4"/>'
+        )
+        content.append(
+            svg_card(ox - 135, 350, 270, 75, option["name"],
+                     f"Итоговая оценка: {option['score']:.2f}", "#FFFFFF", color)
         )
 
         scenarios = option["scenarios"]
         n = len(scenarios)
-        xs = [ox + (j - (n - 1) / 2) * min(0.13, 0.55 / max(n, 1)) for j in range(n)]
+        spacing = min(260, 700 / max(n, 1))
+        start_x = ox - (n - 1) * spacing / 2
 
-        for j, scenario in enumerate(scenarios):
-            lx = xs[j]
-            leaf_positions.append((ox, lx, scenario, option, color, j))
-            ax.plot([ox, lx], [0.50, 0.29], color=color, linewidth=1.8)
-            ax.scatter([lx], [0.29], s=100, color=color, alpha=0.85, zorder=3)
+        for si, scenario in enumerate(scenarios):
+            sx = start_x + si * spacing
+            content.append(
+                f'<line x1="{ox}" y1="350" x2="{sx}" y2="220" '
+                f'stroke="{color}" stroke-width="3"/>'
+            )
+            content.append(
+                f'<circle cx="{sx}" cy="220" r="11" fill="{color}" stroke="white" stroke-width="3"/>'
+            )
+            body = (
+                f"{scenario['name']} · {option['normalized'][si]:.1f}% "
+                f"· оценка {scenario['score']:g}"
+            )
+            content.append(
+                svg_card(sx - 120, 95, 240, 110, f"Исход {si + 1}", body, "#FFFFFF", color)
+            )
 
-    for ox, lx, scenario, option, color, j in leaf_positions:
-        norm_probability = option["normalized"][j]
-        ax.text(
-            lx, 0.24,
-            wrap_for_plot(scenario["name"], 18),
-            ha="center", va="top", fontsize=8, color="#294A65",
-        )
-        ax.text(
-            lx, 0.13,
-            f"{norm_probability:.1f}% · оценка {scenario['score']:g}",
-            ha="center", va="top", fontsize=7, color="#54718A",
-        )
-
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    return fig_to_png(fig)
+    return svg_document("Дерево решений", "".join(content), width, height)
 
 
-def make_vertical_map_png(title, sections, note=None):
-    rows = max(1, len(sections))
-    fig, ax = plt.subplots(figsize=(10, max(5, rows * 1.55 + 1.5)))
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, rows + 1)
-    ax.axis("off")
-    ax.set_facecolor("#F7FBFE")
+def make_vertical_svg(title, sections, note=""):
+    width = 1000
+    card_height = 90
+    gap = 22
+    top = 85
+    height = max(250, top + len(sections) * (card_height + gap) + 90)
+    content = []
 
-    ax.text(
-        0.5, rows + 0.78, title,
-        ha="center", va="center",
-        fontsize=19, fontweight="bold", color="#294A65",
-    )
+    for index, (heading, body) in enumerate(sections):
+        y = top + index * (card_height + gap)
+        fill = "#EAF5FB" if index % 2 == 0 else "#F1F8FC"
+        content.append(svg_card(100, y, 800, card_height, heading, body, fill, "#AFCFE2"))
 
-    colors = ["#EAF5FB", "#EFF8F6", "#F2F1FA", "#FFF6EC", "#FCEFF2"]
-
-    for i, (heading, body) in enumerate(sections):
-        y = rows - i - 0.15
-        draw_box(
-            ax, 0.08, y - 0.65, 0.84, 0.58,
-            heading, body, colors[i % len(colors)]
-        )
-        if i < rows - 1:
-            ax.annotate(
-                "",
-                xy=(0.5, y - 0.92),
-                xytext=(0.5, y - 0.68),
-                arrowprops=dict(arrowstyle="->", color="#7CA9C5", lw=1.6),
+        if index < len(sections) - 1:
+            content.append(
+                f'<line x1="500" y1="{y + card_height}" x2="500" y2="{y + card_height + gap - 4}" '
+                'stroke="#78A8BF" stroke-width="3"/>'
+            )
+            content.append(
+                f'<circle cx="500" cy="{y + card_height + gap / 2}" r="5" fill="#78A8BF"/>'
             )
 
     if note:
-        ax.text(
-            0.5, 0.02, wrap_for_plot(note, 110),
-            ha="center", va="bottom", fontsize=8, color="#648198",
+        content.append(
+            f'<text x="500" y="{height - 24}" text-anchor="middle" '
+            'font-family="Arial, sans-serif" font-size="12" fill="#648198">'
+            f'{escape_text(note)}</text>'
         )
 
-    return fig_to_png(fig)
+    return svg_document(title, "".join(content), width, height)
 
 
-def make_act_png(situation, values, away_actions, inner_experience,
-                 toward_actions, toward_inner, next_step):
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
-    ax.set_facecolor("#F7FBFE")
+def make_act_svg(situation, values, away_actions, inner, toward_actions, toward_inner, next_step):
+    content = []
 
-    ax.text(
-        0.5, 0.97, "ACT-матрица",
-        ha="center", va="top", fontsize=21,
-        fontweight="bold", color="#294A65",
+    content.append(
+        f'<text x="500" y="82" text-anchor="middle" font-family="Arial" font-size="14" fill="#476B85">'
+        f'Ситуация: {escape_text(situation or "—")}</text>'
     )
-    ax.text(
-        0.5, 0.91, f"Ситуация: {wrap_for_plot(situation, 90)}",
-        ha="center", va="top", fontsize=10, color="#54718A",
-    )
-    ax.text(
-        0.5, 0.85, f"Что важно: {wrap_for_plot(values, 90)}",
-        ha="center", va="top", fontsize=10, color="#54718A",
+    content.append(
+        f'<text x="500" y="108" text-anchor="middle" font-family="Arial" font-size="14" fill="#476B85">'
+        f'Что важно: {escape_text(values or "—")}</text>'
     )
 
-    # Сетка квадрантов
-    ax.plot([0.5, 0.5], [0.12, 0.78], color="#9DBBD0", linewidth=2)
-    ax.plot([0.08, 0.92], [0.45, 0.45], color="#9DBBD0", linewidth=2)
+    content.append('<line x1="500" y1="145" x2="500" y2="600" stroke="#9DBBD0" stroke-width="3"/>')
+    content.append('<line x1="70" y1="370" x2="930" y2="370" stroke="#9DBBD0" stroke-width="3"/>')
 
-    quadrants = [
-        (0.08, 0.48, "Действия «от дискомфорта»", away_actions, "#FFF1F1"),
-        (0.52, 0.48, "Действия «к важному»", toward_actions, "#EAF7F1"),
-        (0.08, 0.14, "Внутренний опыт", inner_experience, "#F2F5FC"),
-        (0.52, 0.14, "Внутренний опыт при движении к важному", toward_inner, "#EFF8FC"),
-    ]
+    content.append(svg_card(80, 155, 390, 195, "Действия «от дискомфорта»", away_actions, "#FFF1F1", "#D9A6A6"))
+    content.append(svg_card(530, 155, 390, 195, "Действия «к важному»", toward_actions, "#EAF7F1", "#9FC9B4"))
+    content.append(svg_card(80, 390, 390, 195, "Внутренний опыт", inner, "#F2F5FC", "#B6C5DE"))
+    content.append(svg_card(530, 390, 390, 195, "Внутренний опыт при движении к важному", toward_inner, "#EFF8FC", "#AFCFE2"))
 
-    for x, y, heading, body, color in quadrants:
-        draw_box(ax, x, y, 0.40, 0.28, heading, body, color)
-
-    ax.text(
-        0.5, 0.075, f"Выбранный небольшой шаг: {wrap_for_plot(next_step, 100)}",
-        ha="center", va="center", fontsize=10,
-        fontweight="bold", color="#315773",
+    content.append(
+        f'<text x="500" y="640" text-anchor="middle" font-family="Arial" '
+        f'font-size="14" font-weight="bold" fill="#315773">'
+        f'Небольшой выбранный шаг: {escape_text(next_step or "—")}</text>'
     )
 
-    return fig_to_png(fig)
+    return svg_document("ACT-матрица", "".join(content), 1000, 690)
 
 
-def download_png(label, data, filename, key):
-    st.download_button(
-        label=label,
-        data=data,
-        file_name=filename,
-        mime="image/png",
-        key=key,
-        use_container_width=True,
-    )
-
-
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Дерево решений
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 def new_scenario(first=False):
-    return {"id": uuid.uuid4().hex, "default_probability": 100 if first else 0}
+    return {
+        "id": uuid.uuid4().hex,
+        "default_probability": 100 if first else 0,
+    }
 
 
 def new_option():
-    return {"id": uuid.uuid4().hex, "scenarios": [new_scenario(first=True)]}
-
-
-def decision_clear_result():
-    st.session_state.decision_result = None
+    return {
+        "id": uuid.uuid4().hex,
+        "scenarios": [new_scenario(first=True)],
+    }
 
 
 def initialize_decision_tree():
     if "dt_options" not in st.session_state:
         st.session_state.dt_options = [new_option(), new_option()]
-    if "decision_result" not in st.session_state:
-        st.session_state.decision_result = None
-    if "decision_question" not in st.session_state:
-        st.session_state.decision_question = ""
+    if "dt_result" not in st.session_state:
+        st.session_state.dt_result = None
+    if "dt_question" not in st.session_state:
+        st.session_state.dt_question = ""
 
 
-def add_decision_option():
-    st.session_state.dt_options.append(new_option())
-    decision_clear_result()
-
-
-def delete_decision_option(option_id):
-    if len(st.session_state.dt_options) <= 2:
-        return
-    st.session_state.dt_options = [
-        item for item in st.session_state.dt_options if item["id"] != option_id
-    ]
-    decision_clear_result()
-
-
-def add_decision_scenario(option_id):
-    for option in st.session_state.dt_options:
-        if option["id"] == option_id:
-            option["scenarios"].append(new_scenario())
-            decision_clear_result()
-            break
-
-
-def delete_decision_scenario(option_id, scenario_id):
-    for option in st.session_state.dt_options:
-        if option["id"] == option_id and len(option["scenarios"]) > 1:
-            option["scenarios"] = [
-                item for item in option["scenarios"] if item["id"] != scenario_id
-            ]
-            decision_clear_result()
-            break
+def clear_decision_result():
+    st.session_state.dt_result = None
 
 
 def option_name_key(option_id):
-    return f"dt_name_{option_id}"
+    return f"dt_option_name_{option_id}"
 
 
 def scenario_name_key(scenario_id):
@@ -609,6 +504,40 @@ def score_key(scenario_id):
     return f"dt_score_{scenario_id}"
 
 
+def add_option():
+    st.session_state.dt_options.append(new_option())
+    clear_decision_result()
+
+
+def delete_option(option_id):
+    if len(st.session_state.dt_options) <= 2:
+        return
+    st.session_state.dt_options = [
+        option for option in st.session_state.dt_options
+        if option["id"] != option_id
+    ]
+    clear_decision_result()
+
+
+def add_scenario(option_id):
+    for option in st.session_state.dt_options:
+        if option["id"] == option_id:
+            option["scenarios"].append(new_scenario())
+            clear_decision_result()
+            return
+
+
+def delete_scenario(option_id, scenario_id):
+    for option in st.session_state.dt_options:
+        if option["id"] == option_id and len(option["scenarios"]) > 1:
+            option["scenarios"] = [
+                scenario for scenario in option["scenarios"]
+                if scenario["id"] != scenario_id
+            ]
+            clear_decision_result()
+            return
+
+
 def render_decision_tree():
     initialize_decision_tree()
 
@@ -617,42 +546,42 @@ def render_decision_tree():
 
     st.text_input(
         "Какое решение нужно принять?",
-        key="decision_question",
+        key="dt_question",
         placeholder="Например: «Стоит ли менять работу?»",
-        on_change=decision_clear_result,
+        on_change=clear_decision_result,
     )
 
-    st.caption("Для каждого варианта добавьте возможные исходы, вероятности и личную оценку.")
+    st.caption("Для каждого варианта добавьте исходы, их вероятности и личную оценку.")
 
-    for option_index, option in enumerate(list(st.session_state.dt_options), start=1):
-        option_id = option["id"]
-        name_key = option_name_key(option_id)
+    for oi, option in enumerate(list(st.session_state.dt_options), start=1):
+        oid = option["id"]
+        name_key = option_name_key(oid)
 
         if name_key not in st.session_state:
             st.session_state[name_key] = ""
 
         with st.container(border=True):
-            title_col, delete_col = st.columns([5, 1.5])
-            with title_col:
-                st.markdown(f"### Вариант {option_index}")
+            header, delete_col = st.columns([5, 1.5])
+            with header:
+                st.markdown(f"### Вариант {oi}")
             with delete_col:
                 st.button(
                     "Удалить вариант",
-                    key=f"dt_delete_option_{option_id}",
+                    key=f"dt_delete_option_{oid}",
                     disabled=len(st.session_state.dt_options) <= 2,
-                    on_click=delete_decision_option,
-                    args=(option_id,),
+                    on_click=delete_option,
+                    args=(oid,),
                     use_container_width=True,
                 )
 
             st.text_input(
                 "Название варианта",
                 key=name_key,
-                placeholder=f"Вариант {option_index}",
-                on_change=decision_clear_result,
+                placeholder=f"Вариант {oi}",
+                on_change=clear_decision_result,
             )
 
-            for scenario_index, scenario in enumerate(list(option["scenarios"]), start=1):
+            for si, scenario in enumerate(list(option["scenarios"]), start=1):
                 sid = scenario["id"]
                 nkey, pkey, skey = (
                     scenario_name_key(sid),
@@ -668,16 +597,16 @@ def render_decision_tree():
                     st.session_state[skey] = 0.0
 
                 with st.container(border=True):
-                    head, delete = st.columns([5, 1.5])
-                    with head:
-                        st.markdown(f"**Сценарий {scenario_index}**")
-                    with delete:
+                    row1, row2 = st.columns([5, 1.5])
+                    with row1:
+                        st.markdown(f"**Сценарий {si}**")
+                    with row2:
                         st.button(
-                            "Удалить",
+                            "Удалить сценарий",
                             key=f"dt_delete_scenario_{sid}",
                             disabled=len(option["scenarios"]) <= 1,
-                            on_click=delete_decision_scenario,
-                            args=(option_id, sid),
+                            on_click=delete_scenario,
+                            args=(oid, sid),
                             use_container_width=True,
                         )
 
@@ -685,39 +614,43 @@ def render_decision_tree():
                         "Описание возможного исхода",
                         key=nkey,
                         placeholder="Например: «Найду более интересную работу»",
-                        on_change=decision_clear_result,
+                        on_change=clear_decision_result,
                     )
 
                     c1, c2 = st.columns(2)
                     with c1:
                         st.slider(
                             "Вероятность, %",
-                            0, 100, step=1,
+                            min_value=0,
+                            max_value=100,
+                            step=1,
                             key=pkey,
-                            on_change=decision_clear_result,
+                            on_change=clear_decision_result,
                         )
                     with c2:
                         st.slider(
                             "Оценка исхода",
-                            -5.0, 5.0, step=0.5,
+                            min_value=-5.0,
+                            max_value=5.0,
+                            step=0.5,
                             key=skey,
                             help="−5 — очень нежелательный, +5 — очень желательный.",
-                            on_change=decision_clear_result,
+                            on_change=clear_decision_result,
                         )
 
             st.button(
                 "＋ Добавить сценарий",
-                key=f"dt_add_scenario_{option_id}",
-                on_click=add_decision_scenario,
-                args=(option_id,),
+                key=f"dt_add_scenario_{oid}",
+                on_click=add_scenario,
+                args=(oid,),
             )
 
-    c1, c2, _ = st.columns([1.6, 1.8, 4])
+    c1, c2, _ = st.columns([1.7, 1.9, 4])
     with c1:
         st.button(
             "＋ Добавить вариант",
             key="dt_add_option",
-            on_click=add_decision_option,
+            on_click=add_option,
             use_container_width=True,
         )
     with c2:
@@ -725,13 +658,13 @@ def render_decision_tree():
             "− Удалить последний",
             key="dt_remove_last",
             disabled=len(st.session_state.dt_options) <= 2,
-            on_click=delete_decision_option,
+            on_click=delete_option,
             args=(st.session_state.dt_options[-1]["id"],),
             use_container_width=True,
         )
 
     if st.button("Рассчитать и построить дерево", type="primary", use_container_width=True):
-        question = st.session_state.decision_question.strip()
+        question = st.session_state.dt_question.strip()
         prepared = []
         error = None
         used_names = set()
@@ -755,12 +688,14 @@ def render_decision_tree():
             scenarios = []
             for si, scenario in enumerate(option["scenarios"], start=1):
                 sid = scenario["id"]
-                sname = st.session_state.get(scenario_name_key(sid), "").strip()
-                if not sname:
+                scenario_name = st.session_state.get(scenario_name_key(sid), "").strip()
+
+                if not scenario_name:
                     error = f"Заполните сценарий {si} варианта «{name}»."
                     break
+
                 scenarios.append({
-                    "name": sname,
+                    "name": scenario_name,
                     "probability": int(st.session_state[probability_key(sid)]),
                     "score": float(st.session_state[score_key(sid)]),
                 })
@@ -768,15 +703,15 @@ def render_decision_tree():
             if error:
                 break
 
-            total = sum(s["probability"] for s in scenarios)
-            if total <= 0:
+            total = sum(item["probability"] for item in scenarios)
+            if total == 0:
                 error = f"Для варианта «{name}» задайте ненулевую вероятность."
                 break
 
-            normalized = [s["probability"] / total * 100 for s in scenarios]
+            normalized = [item["probability"] / total * 100 for item in scenarios]
             expected = sum(
-                normalized[i] / 100 * scenario["score"]
-                for i, scenario in enumerate(scenarios)
+                normalized[index] / 100 * item["score"]
+                for index, item in enumerate(scenarios)
             )
 
             prepared.append({
@@ -787,44 +722,39 @@ def render_decision_tree():
             })
 
         if error:
-            st.session_state.decision_result = None
+            st.session_state.dt_result = None
             st.warning(error)
         else:
-            best_name = max(prepared, key=lambda x: x["score"])["name"]
-            st.session_state.decision_result = {
+            best_name = max(prepared, key=lambda item: item["score"])["name"]
+            st.session_state.dt_result = {
                 "question": question,
                 "options": prepared,
                 "best_name": best_name,
             }
 
-    result = st.session_state.decision_result
+    result = st.session_state.dt_result
     if result:
         st.subheader("Результат")
         columns = st.columns(len(result["options"]))
-        for col, option in zip(columns, result["options"]):
-            with col:
-                st.metric(
-                    label=("🌿 " if option["name"] == result["best_name"] else "") + option["name"],
-                    value=f"{option['score']:.2f} / 5",
-                )
 
-        st.success(f"По указанным оценкам лидирует вариант: **{result['best_name']}**.")
-        st.caption(
-            "Это ориентир для размышления, а не автоматическое решение. "
-            "Вероятности нормализуются отдельно внутри каждого варианта."
+        for column, option in zip(columns, result["options"]):
+            with column:
+                label = ("🌿 " if option["name"] == result["best_name"] else "") + option["name"]
+                st.metric(label=label, value=f"{option['score']:.2f} / 5")
+
+        st.info(
+            f"По указанным оценкам лидирует вариант: **{result['best_name']}**. "
+            "Это материал для размышления, а не автоматическое решение."
         )
 
-        image = make_decision_png(
-            result["question"],
-            result["options"],
-        )
-        st.image(image, use_container_width=True)
-        download_png("⬇️ Скачать дерево решений PNG", image, "derevo-resheniy.png", "download_decision")
+        svg = make_decision_svg(result["question"], result["options"])
+        st.image(svg.encode("utf-8"), use_container_width=True)
+        download_svg("⬇️ Скачать дерево решений (SVG)", svg, "derevo-resheniy.svg", "download_decision_svg")
 
 
-# -------------------------------------------------------------------
-# Цепочный анализ поведения
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Цепочный анализ ДБТ
+# ---------------------------------------------------------------------
 
 def initialize_chain():
     if "chain_links" not in st.session_state:
@@ -841,7 +771,8 @@ def add_chain_link():
 def remove_chain_link(link_id):
     if len(st.session_state.chain_links) > 1:
         st.session_state.chain_links = [
-            x for x in st.session_state.chain_links if x["id"] != link_id
+            item for item in st.session_state.chain_links
+            if item["id"] != link_id
         ]
 
 
@@ -849,31 +780,37 @@ def render_chain():
     initialize_chain()
 
     st.title("🔗 Цепочный анализ поведения (ДБТ)")
-    st.write("Совместно исследуйте контекст, звенья цепочки и последствия.")
+    st.write("Исследуйте контекст, последовательность реакций, поведение и последствия.")
     st.info("Можно сделать паузу, пропустить поле или остановиться в любой момент.")
 
-    st.text_area(
+    vulnerability = st.text_area(
         "Факторы уязвимости",
         key="chain_vulnerability",
         placeholder="Что могло сделать ситуацию сложнее заранее?",
     )
-    st.text_area(
+    prompting = st.text_area(
         "Запускающее событие",
         key="chain_prompt",
         placeholder="Что произошло непосредственно перед поведением? Опишите факты.",
     )
 
     st.subheader("Звенья цепочки")
+    sections = [
+        ("Факторы уязвимости", vulnerability),
+        ("Запускающее событие", prompting),
+    ]
+
     for index, link in enumerate(list(st.session_state.chain_links), start=1):
         lid = link["id"]
+
         with st.container(border=True):
-            head, delete = st.columns([5, 1.2])
-            with head:
+            title_col, delete_col = st.columns([5, 1.5])
+            with title_col:
                 st.markdown(f"**Звено {index}**")
-            with delete:
+            with delete_col:
                 st.button(
                     "Удалить",
-                    key=f"chain_del_{lid}",
+                    key=f"chain_delete_{lid}",
                     disabled=len(st.session_state.chain_links) <= 1,
                     on_click=remove_chain_link,
                     args=(lid,),
@@ -882,85 +819,79 @@ def render_chain():
 
             c1, c2 = st.columns(2)
             with c1:
-                st.text_area("Мысли или образы", key=f"chain_thought_{lid}")
-                st.text_area("Ощущения в теле", key=f"chain_body_{lid}")
+                thought = st.text_area("Мысли или образы", key=f"chain_thought_{lid}")
+                body = st.text_area("Ощущения в теле", key=f"chain_body_{lid}")
             with c2:
-                st.text_area("Эмоции", key=f"chain_emotion_{lid}")
-                st.text_area("Импульсы или действия", key=f"chain_action_{lid}")
+                emotion = st.text_area("Эмоции", key=f"chain_emotion_{lid}")
+                action = st.text_area("Импульсы или действия", key=f"chain_action_{lid}")
 
             st.slider(
                 "Интенсивность (необязательно)",
-                0, 10, 0,
+                min_value=0,
+                max_value=10,
+                value=0,
                 key=f"chain_intensity_{lid}",
             )
-            st.checkbox(
+            intervention = st.checkbox(
                 "Отметить как возможную точку вмешательства",
                 key=f"chain_intervention_{lid}",
             )
-            st.text_area(
+            skill = st.text_area(
                 "Возможный другой шаг, навык или поддержка",
                 key=f"chain_skill_{lid}",
             )
 
+        body_text = "\n".join(
+            f"{label}: {value}"
+            for label, value in [
+                ("Мысли", thought),
+                ("Эмоции", emotion),
+                ("Ощущения в теле", body),
+                ("Импульсы / действия", action),
+            ]
+            if value.strip()
+        )
+        if intervention:
+            body_text += "\nВозможная точка вмешательства"
+        if skill.strip():
+            body_text += f"\nВозможная поддержка: {skill}"
+
+        sections.append((f"Звено {index}", body_text))
+
     st.button("＋ Добавить звено", on_click=add_chain_link)
 
     st.subheader("Целевое поведение и последствия")
-    st.text_area("Целевое поведение", key="chain_target")
+    target = st.text_area("Целевое поведение", key="chain_target")
     c1, c2 = st.columns(2)
     with c1:
-        st.text_area("Последствия сразу после", key="chain_immediate")
+        immediate = st.text_area("Последствия сразу после", key="chain_immediate")
     with c2:
-        st.text_area("Последствия позднее", key="chain_later")
-    st.text_area("Восстановление ситуации или снижение последствий", key="chain_repair")
+        later = st.text_area("Последствия позднее", key="chain_later")
+    repair = st.text_area("Восстановление ситуации или поддержка", key="chain_repair")
 
-    if st.checkbox("Показать сводную карту", value=True, key="chain_summary_toggle"):
-        sections = [
-            ("Факторы уязвимости", st.session_state.get("chain_vulnerability", "")),
-            ("Запускающее событие", st.session_state.get("chain_prompt", "")),
-        ]
+    sections.extend([
+        ("Целевое поведение", target),
+        ("Последствия сразу после", immediate),
+        ("Последствия позднее", later),
+        ("Восстановление / поддержка", repair),
+    ])
 
-        for index, link in enumerate(st.session_state.chain_links, start=1):
-            lid = link["id"]
-            body = "\n".join(
-                f"{label}: {st.session_state.get(key, '')}"
-                for label, key in [
-                    ("Мысли", f"chain_thought_{lid}"),
-                    ("Эмоции", f"chain_emotion_{lid}"),
-                    ("Ощущения", f"chain_body_{lid}"),
-                    ("Импульсы / действия", f"chain_action_{lid}"),
-                ]
-                if st.session_state.get(key, "").strip()
-            )
-            if st.session_state.get(f"chain_intervention_{lid}", False):
-                body += "\n[Отмечено как возможная точка вмешательства]"
-                skill = st.session_state.get(f"chain_skill_{lid}", "").strip()
-                if skill:
-                    body += f"\nВозможная поддержка: {skill}"
-            sections.append((f"Звено {index}", body))
+    with st.expander("Показать сводную карту", expanded=True):
+        for heading, body in sections:
+            st.markdown(f"**{heading}**")
+            st.write(body or "—")
 
-        sections.extend([
-            ("Целевое поведение", st.session_state.get("chain_target", "")),
-            ("Последствия сразу после", st.session_state.get("chain_immediate", "")),
-            ("Последствия позднее", st.session_state.get("chain_later", "")),
-            ("Восстановление / поддержка", st.session_state.get("chain_repair", "")),
-        ])
-
-        with st.container(border=True):
-            for heading, body in sections:
-                st.markdown(f"**{heading}**")
-                st.write(body or "—")
-
-        png = make_vertical_map_png(
-            "Цепочный анализ поведения",
-            sections,
-            "Карта для обсуждения; связи и гипотезы определяются участниками.",
-        )
-        download_png("⬇️ Скачать карту цепочки PNG", png, "cepochniy-analiz.png", "download_chain")
+    svg = make_vertical_svg(
+        "Цепочный анализ поведения",
+        sections,
+        "Карта для обсуждения, а не диагноз или автоматическая оценка.",
+    )
+    download_svg("⬇️ Скачать карту цепочки (SVG)", svg, "cepochniy-analiz.svg", "download_chain_svg")
 
 
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Иерархия экспозиции
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 def initialize_exposure():
     if "exposure_steps" not in st.session_state:
@@ -978,7 +909,8 @@ def add_exposure_step():
 def remove_exposure_step(step_id):
     if len(st.session_state.exposure_steps) > 1:
         st.session_state.exposure_steps = [
-            x for x in st.session_state.exposure_steps if x["id"] != step_id
+            item for item in st.session_state.exposure_steps
+            if item["id"] != step_id
         ]
 
 
@@ -992,19 +924,20 @@ def render_exposure():
         "Не используйте упражнение для ситуаций с реальной опасностью."
     )
 
-    st.text_area("Цель работы", key="exposure_goal")
-
+    goal = st.text_area("Цель работы", key="exposure_goal")
     records = []
-    for index, item in enumerate(list(st.session_state.exposure_steps), start=1):
-        sid = item["id"]
+
+    for index, step in enumerate(list(st.session_state.exposure_steps), start=1):
+        sid = step["id"]
+
         with st.container(border=True):
-            head, delete = st.columns([5, 1.2])
-            with head:
+            title_col, delete_col = st.columns([5, 1.5])
+            with title_col:
                 st.markdown(f"**Ступень {index}**")
-            with delete:
+            with delete_col:
                 st.button(
                     "Удалить",
-                    key=f"exposure_del_{sid}",
+                    key=f"exposure_delete_{sid}",
                     disabled=len(st.session_state.exposure_steps) <= 1,
                     on_click=remove_exposure_step,
                     args=(sid,),
@@ -1014,7 +947,9 @@ def render_exposure():
             situation = st.text_area("Ситуация", key=f"exp_situation_{sid}")
             distress = st.slider(
                 "Ожидаемая тревога (0–10)",
-                0, 10, 3,
+                min_value=0,
+                max_value=10,
+                value=3,
                 key=f"exp_distress_{sid}",
             )
             prediction = st.text_area("Прогноз или опасение", key=f"exp_prediction_{sid}")
@@ -1041,8 +976,8 @@ def render_exposure():
 
     st.button("＋ Добавить ступень", on_click=add_exposure_step)
 
-    ordered = sorted(records, key=lambda x: (x["distress"], x["index"]))
-    sections = [("Цель", st.session_state.get("exposure_goal", ""))]
+    ordered = sorted(records, key=lambda item: (item["distress"], item["index"]))
+    sections = [("Цель", goal)]
 
     st.subheader("Лестница по ожидаемой тревоге")
     for position, item in enumerate(ordered, start=1):
@@ -1058,7 +993,7 @@ def render_exposure():
             if item["prediction"]:
                 st.write(f"**Прогноз:** {item['prediction']}")
             if item["plan"]:
-                st.write(f"**Шаг:** {item['plan']}")
+                st.write(f"**Обсуждаемый шаг:** {item['plan']}")
             if item["reflection"]:
                 st.write(f"**Наблюдения:** {item['reflection']}")
 
@@ -1067,31 +1002,27 @@ def render_exposure():
             "\n".join([
                 f"Ситуация: {item['situation']}",
                 f"Прогноз: {item['prediction']}",
-                f"Планируемый шаг: {item['plan']}",
+                f"Шаг: {item['plan']}",
                 f"Наблюдения: {item['reflection']}",
             ]),
         ))
 
-    if len(sections) > 1:
-        png = make_vertical_map_png(
-            "Иерархия экспозиции",
-            sections,
-            "Порядок ступеней — материал для обсуждения, а не автоматическое назначение.",
-        )
-        download_png("⬇️ Скачать лестницу PNG", png, "ierarhiya-ekspozicii.png", "download_exposure")
+    svg = make_vertical_svg(
+        "Иерархия экспозиции",
+        sections,
+        "Порядок ступеней — материал для обсуждения, не автоматическое назначение.",
+    )
+    download_svg("⬇️ Скачать лестницу (SVG)", svg, "ierarhiya-ekspozicii.svg", "download_exposure_svg")
 
 
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # ACT-матрица
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 def render_act_matrix():
     st.title("🧭 ACT-матрица")
     st.write("Исследуйте, что уводит от дискомфорта и какие действия приближают к важному.")
-    st.info(
-        "Матрица — материал для совместного исследования. Она не оценивает "
-        "поведение как правильное или неправильное."
-    )
+    st.info("Матрица — материал для совместного исследования, а не оценка правильности поведения.")
 
     situation = st.text_area("Ситуация, которую хотите исследовать", key="act_situation")
     values = st.text_area(
@@ -1101,6 +1032,7 @@ def render_act_matrix():
     )
 
     left, right = st.columns(2)
+
     with left:
         with st.container(border=True):
             st.markdown("### Действия «от дискомфорта»")
@@ -1111,7 +1043,7 @@ def render_act_matrix():
             )
         with st.container(border=True):
             st.markdown("### Внутренний опыт")
-            inner_experience = st.text_area(
+            inner = st.text_area(
                 "Мысли, эмоции, телесные ощущения",
                 key="act_inner_experience",
                 placeholder="Что возникает внутри в этой ситуации?",
@@ -1139,81 +1071,72 @@ def render_act_matrix():
         placeholder="Какой шаг вы сами хотели бы попробовать?",
     )
 
-    if st.checkbox("Показать сводную матрицу", value=True, key="act_show_summary"):
-        png = make_act_png(
-            situation, values, away_actions, inner_experience,
-            toward_actions, toward_inner, next_step,
-        )
-        st.image(png, use_container_width=True)
-        download_png("⬇️ Скачать ACT-матрицу PNG", png, "act-matrix.png", "download_act")
+    svg = make_act_svg(
+        situation,
+        values,
+        away_actions,
+        inner,
+        toward_actions,
+        toward_inner,
+        next_step,
+    )
+
+    st.subheader("Предварительный вид карты")
+    st.image(svg.encode("utf-8"), use_container_width=True)
+    download_svg("⬇️ Скачать ACT-матрицу (SVG)", svg, "act-matrix.svg", "download_act_svg")
 
 
-# -------------------------------------------------------------------
-# Главная, библиотека, о нас
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Страницы сайта
+# ---------------------------------------------------------------------
 
 def render_home():
-    hero_html = """
-    <div style="
-        min-height:350px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:42px 25px;
-        box-sizing:border-box;
-        border:1px solid #C9E0EF;
-        border-radius:30px;
-        background:linear-gradient(135deg, rgba(229,243,252,.96), rgba(244,250,254,.96), rgba(220,239,250,.96));
-        box-shadow:0 18px 42px rgba(48,105,145,.12);
-        text-align:center;
-        overflow:hidden;
-        position:relative;
-        font-family:'Nunito Sans',Arial,sans-serif;
-    ">
-      <svg viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice"
-           xmlns="http://www.w3.org/2000/svg"
-           style="position:absolute;inset:0;width:100%;height:100%;opacity:.48;pointer-events:none">
-        <g fill="none" stroke="#5794BB" stroke-width="2">
-          <path d="M40 95 L170 155 L285 80 L420 145 L545 65"/>
-          <path d="M170 155 L250 285 L390 250 L420 145"/>
-          <path d="M390 250 L520 330 L650 260 L770 325"/>
-          <path d="M545 65 L680 120 L810 65 L930 145"/>
-          <path d="M680 120 L650 260"/>
-          <path d="M930 145 L1080 90 L1170 170"/>
-          <path d="M930 145 L980 285 L1130 330"/>
-          <path d="M770 325 L850 415 L980 285"/>
-        </g>
-        <g fill="#4D8FB8" stroke="#F5FAFE" stroke-width="5">
-          <circle cx="40" cy="95" r="10"/><circle cx="170" cy="155" r="13"/>
-          <circle cx="285" cy="80" r="10"/><circle cx="420" cy="145" r="12"/>
-          <circle cx="545" cy="65" r="9"/><circle cx="250" cy="285" r="10"/>
-          <circle cx="390" cy="250" r="13"/><circle cx="520" cy="330" r="10"/>
-          <circle cx="650" cy="260" r="12"/><circle cx="680" cy="120" r="9"/>
-          <circle cx="810" cy="65" r="12"/><circle cx="930" cy="145" r="13"/>
-          <circle cx="1080" cy="90" r="10"/><circle cx="980" cy="285" r="11"/>
-          <circle cx="1130" cy="330" r="9"/><circle cx="850" cy="415" r="10"/>
-        </g>
-      </svg>
-      <div style="position:relative;z-index:1;max-width:820px">
+    st.markdown(
+        """
         <div style="
-            color:#214D6C;font-size:clamp(3.8rem,9vw,6.7rem);
-            font-weight:800;line-height:1;letter-spacing:.035em;
-            text-shadow:0 3px 14px rgba(255,255,255,.75)">
-            ПСИ-БЛОК
+            min-height:350px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:42px 25px;
+            margin:20px 0 26px 0;
+            box-sizing:border-box;
+            border:1px solid #C9E0EF;
+            border-radius:30px;
+            background:linear-gradient(135deg,rgba(229,243,252,.96),rgba(244,250,254,.96),rgba(220,239,250,.96));
+            box-shadow:0 18px 42px rgba(48,105,145,.12);
+            text-align:center;
+        ">
+          <div style="max-width:820px">
+            <div style="
+                color:#214D6C;
+                font-family:Arial,sans-serif;
+                font-size:clamp(3.8rem,9vw,6.7rem);
+                font-weight:800;
+                line-height:1;
+                letter-spacing:.035em;
+                text-shadow:0 3px 14px rgba(255,255,255,.75)">
+                ПСИ-БЛОК
+            </div>
+            <div style="
+                max-width:760px;
+                margin:20px auto 0 auto;
+                color:#476B85;
+                font-family:Arial,sans-serif;
+                font-size:1.2rem;
+                line-height:1.7">
+                Пространство с наглядными инструментами для совместной работы
+                психолога и клиента. Мы создаём его, чтобы структурировать
+                обсуждение и помогать возвращаться к важным идеям в ходе работы.
+            </div>
+          </div>
         </div>
-        <div style="
-            max-width:760px;margin:20px auto 0 auto;color:#476B85;
-            font-size:1.2rem;line-height:1.7">
-            Пространство с наглядными инструментами для совместной работы
-            психолога и клиента. Мы создаём его, чтобы структурировать
-            обсуждение и помогать возвращаться к важным идеям в ходе работы.
-        </div>
-      </div>
-    </div>
-    """
-    components.html(hero_html, height=380, scrolling=False)
+        """,
+        unsafe_allow_html=True,
+    )
 
     left, right = st.columns(2)
+
     with left:
         st.button(
             "📚  Библиотека техник",
@@ -1221,6 +1144,7 @@ def render_home():
             use_container_width=True,
             on_click=go_library,
         )
+
     with right:
         st.button(
             "ℹ️  О нас",
@@ -1245,6 +1169,7 @@ def render_library():
     items = list(TECHNIQUES.items())
     for start in range(0, len(items), 2):
         columns = st.columns(2)
+
         for column, (technique_id, technique) in zip(columns, items[start:start + 2]):
             with column:
                 with st.container(border=True):
@@ -1275,30 +1200,51 @@ def render_about():
     st.subheader("Команда разработчиков")
 
     developers = [
-        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer1.jpg"},
-        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer2.jpg"},
-        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer3.jpg"},
+        {
+            "name": "Имя Фамилия",
+            "role": "Роль в проекте",
+            "photo": "assets/developer1.jpg",
+        },
+        {
+            "name": "Имя Фамилия",
+            "role": "Роль в проекте",
+            "photo": "assets/developer2.jpg",
+        },
+        {
+            "name": "Имя Фамилия",
+            "role": "Роль в проекте",
+            "photo": "assets/developer3.jpg",
+        },
     ]
 
     columns = st.columns(3)
     for column, person in zip(columns, developers):
         with column:
             with st.container(border=True):
-                path = Path(person["photo"])
-                if path.exists():
-                    st.image(str(path), use_container_width=True)
+                photo_path = Path(person["photo"])
+
+                if photo_path.is_file():
+                    st.image(str(photo_path), use_container_width=True)
                 else:
                     st.markdown(
-                        "<div style='height:220px;display:flex;align-items:center;"
-                        "justify-content:center;border-radius:14px;"
-                        "background:linear-gradient(135deg,#E3F2FB,#F4FAFE);"
-                        "font-size:4rem'>👤</div>",
+                        """
+                        <div style="
+                            height:220px;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            border-radius:14px;
+                            background:linear-gradient(135deg,#E3F2FB,#F4FAFE);
+                            font-size:4rem;">
+                            👤
+                        </div>
+                        """,
                         unsafe_allow_html=True,
                     )
 
                 st.markdown(
-                    f"<div class='developer-name'>{safe_text(person['name'])}</div>"
-                    f"<div class='developer-role'>{safe_text(person['role'])}</div>",
+                    f"<div class='developer-name'>{escape_text(person['name'])}</div>"
+                    f"<div class='developer-role'>{escape_text(person['role'])}</div>",
                     unsafe_allow_html=True,
                 )
 
@@ -1309,7 +1255,7 @@ def render_about():
     )
 
 
-def render_technique():
+def render_selected_technique():
     technique_id = st.session_state.selected_technique
     technique = TECHNIQUES.get(technique_id)
 
@@ -1331,9 +1277,9 @@ def render_technique():
         render_act_matrix()
 
 
-# -------------------------------------------------------------------
-# Роутинг
-# -------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# Запуск приложения
+# ---------------------------------------------------------------------
 
 render_navigation()
 st.divider()
@@ -1345,7 +1291,7 @@ elif st.session_state.page == "library":
 elif st.session_state.page == "about":
     render_about()
 elif st.session_state.page == "technique":
-    render_technique()
+    render_selected_technique()
 else:
     st.session_state.page = "home"
     render_home()
