@@ -1,5 +1,3 @@
-pip install streamlit matplotlib
-streamlit run app.py
 from io import BytesIO
 from pathlib import Path
 import html
