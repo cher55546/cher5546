@@ -322,7 +322,7 @@ def render_navigation():
 
 
 # ---------------------------------------------------------------------
-# Генерация интерактивной схемы SVG с масштабированием и PNG
+# SVG-схемы с масштабированием и PNG-скачиванием
 # ---------------------------------------------------------------------
 
 def svg_escape(value):
@@ -370,8 +370,7 @@ def svg_multiline(
     )
 
 
-def svg_card(x, y, width, height, title, body,
-             fill="#F8FCFF", stroke="#AFCFE2"):
+def svg_card(x, y, width, height, title, body, fill="#F8FCFF", stroke="#AFCFE2"):
     title_y = y + 32
     body_y = y + 62
     max_chars = max(14, int(width / 12))
@@ -548,7 +547,6 @@ def render_interactive_diagram(svg, component_key, height=760):
 
           viewport.addEventListener("pointermove", event => {
             if (!dragging) return;
-
             const rect = svg.getBoundingClientRect();
             const scaleX = view.width / rect.width;
             const scaleY = view.height / rect.height;
@@ -639,7 +637,7 @@ def render_interactive_diagram(svg, component_key, height=760):
 
 
 # ---------------------------------------------------------------------
-# Конструкторы схем
+# Схемы для техник
 # ---------------------------------------------------------------------
 
 def make_decision_svg(question, options):
@@ -934,9 +932,7 @@ def render_decision_tree():
         on_change=clear_decision_result,
     )
 
-    st.caption(
-        "Для каждого варианта добавьте исходы, вероятности и личную оценку."
-    )
+    st.caption("Для каждого варианта добавьте исходы, вероятности и личную оценку.")
 
     for option_index, option in enumerate(
         list(st.session_state.dt_options), start=1
@@ -1758,17 +1754,17 @@ def render_about():
         {
             "name": "Имя Фамилия",
             "role": "Роль в проекте",
-            "photo": "assets/developer1.jpg",
+            "photo": "developer1.jpg",
         },
         {
             "name": "Имя Фамилия",
             "role": "Роль в проекте",
-            "photo": "assets/developer2.jpg",
+            "photo": "developer2.jpg",
         },
         {
             "name": "Имя Фамилия",
             "role": "Роль в проекте",
-            "photo": "assets/developer3.jpg",
+            "photo": "developer3.jpg",
         },
     ]
 
