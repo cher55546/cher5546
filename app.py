@@ -1,8 +1,16 @@
+pip install streamlit matplotlib
+streamlit run app.py
+from io import BytesIO
+from pathlib import Path
 import html
 import textwrap
 import uuid
-from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -15,77 +23,131 @@ st.set_page_config(
 
 
 # -------------------------------------------------------------------
-# Оформление
+# Декоративный фон: полупрозрачная нейронная сеть по всему экрану
+# -------------------------------------------------------------------
+
+NEURON_BACKGROUND = """
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800">
+  <g fill="none" stroke="#4389B5" stroke-opacity="0.11" stroke-width="2">
+    <path d="M25 92 L130 145 L225 80 L340 150 L455 70 L565 145 L690 86 L815 155 L955 82"/>
+    <path d="M130 145 L175 290 L300 340 L420 250 L565 145"/>
+    <path d="M225 80 L245 20"/>
+    <path d="M340 150 L325 235 L420 250 L500 360 L635 325 L760 390"/>
+    <path d="M455 70 L485 20"/>
+    <path d="M565 145 L635 210 L760 170 L815 155"/>
+    <path d="M690 86 L710 25"/>
+    <path d="M815 155 L860 275 L955 310"/>
+    <path d="M175 290 L100 430 L215 510 L300 430 L300 340"/>
+    <path d="M420 250 L380 430 L500 520 L635 450 L635 325"/>
+    <path d="M760 390 L840 500 L950 455"/>
+    <path d="M100 430 L55 600 L180 700 L310 635 L300 520 L215 510"/>
+    <path d="M500 520 L455 660 L570 760 L710 675 L635 560 L635 450"/>
+    <path d="M840 500 L815 650 L930 735"/>
+    <path d="M310 635 L390 760"/>
+  </g>
+  <g fill="#4389B5" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="3">
+    <circle cx="25" cy="92" r="8"/><circle cx="130" cy="145" r="12"/>
+    <circle cx="225" cy="80" r="9"/><circle cx="340" cy="150" r="12"/>
+    <circle cx="455" cy="70" r="8"/><circle cx="565" cy="145" r="11"/>
+    <circle cx="690" cy="86" r="9"/><circle cx="815" cy="155" r="12"/>
+    <circle cx="955" cy="82" r="8"/><circle cx="175" cy="290" r="10"/>
+    <circle cx="300" cy="340" r="8"/><circle cx="420" cy="250" r="12"/>
+    <circle cx="500" cy="360" r="9"/><circle cx="635" cy="325" r="12"/>
+    <circle cx="760" cy="390" r="10"/><circle cx="100" cy="430" r="8"/>
+    <circle cx="215" cy="510" r="12"/><circle cx="380" cy="430" r="9"/>
+    <circle cx="500" cy="520" r="12"/><circle cx="635" cy="450" r="9"/>
+    <circle cx="840" cy="500" r="11"/><circle cx="180" cy="700" r="9"/>
+    <circle cx="310" cy="635" r="11"/><circle cx="570" cy="760" r="8"/>
+    <circle cx="710" cy="675" r="12"/><circle cx="930" cy="735" r="9"/>
+  </g>
+</svg>
+"""
+
+import base64
+
+NEURON_BACKGROUND_B64 = base64.b64encode(
+    NEURON_BACKGROUND.encode("utf-8")
+).decode("ascii")
+
+
+# -------------------------------------------------------------------
+# Стили
 # -------------------------------------------------------------------
 
 st.markdown(
-    """
+    f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
 
-    .stApp {
+    .stApp {{
         background:
-            radial-gradient(ellipse at 10% 5%, rgba(196, 228, 248, .58), transparent 34%),
-            radial-gradient(ellipse at 92% 18%, rgba(219, 239, 251, .72), transparent 36%),
+            radial-gradient(ellipse at 10% 5%, rgba(196, 228, 248, .62), transparent 34%),
+            radial-gradient(ellipse at 92% 18%, rgba(219, 239, 251, .70), transparent 36%),
             linear-gradient(145deg, #F5FAFE 0%, #EDF6FC 52%, #F8FBFE 100%);
         color: #294A65;
-    }
+    }}
 
-    [data-testid="stHeader"] {
+    .stApp::before {{
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.72;
+        background-image: url("data:image/svg+xml;base64,{NEURON_BACKGROUND_B64}");
+        background-size: 1000px 800px;
+        background-repeat: repeat;
+    }}
+
+    [data-testid="stHeader"] {{
         background: transparent;
-    }
+    }}
 
-    .block-container {
+    [data-testid="stAppViewContainer"] > .main {{
+        position: relative;
+        z-index: 1;
+    }}
+
+    .block-container {{
         max-width: 1120px;
-        padding-top: 1.8rem;
+        padding-top: 1.4rem;
         padding-bottom: 4rem;
-    }
+    }}
 
-    h1, h2, h3, h4, p, label, button, input, textarea {
+    h1, h2, h3, h4, p, label, button, input, textarea {{
         font-family: "Nunito Sans", "Segoe UI", sans-serif !important;
-    }
+    }}
 
-    h1, h2, h3, h4 {
+    h1, h2, h3, h4 {{
         color: #294A65 !important;
         letter-spacing: -0.025em;
-    }
+    }}
 
-    h1 {
-        font-size: 2.8rem !important;
-        font-weight: 800 !important;
-    }
+    h1 {{ font-size: 2.65rem !important; font-weight: 800 !important; }}
+    h2 {{ font-size: 1.85rem !important; font-weight: 800 !important; }}
+    h3 {{ font-size: 1.3rem !important; font-weight: 800 !important; }}
 
-    h2 {
-        font-size: 1.9rem !important;
-        font-weight: 800 !important;
-    }
-
-    h3 {
-        font-size: 1.35rem !important;
-        font-weight: 800 !important;
-    }
-
-    p, label, [data-testid="stCaptionContainer"] {
+    p, label, [data-testid="stCaptionContainer"] {{
         color: #54718A;
-    }
+    }}
 
-    [data-testid="stVerticalBlockBorderWrapper"] {
+    [data-testid="stVerticalBlockBorderWrapper"] {{
         border: 1px solid #D4E5F1 !important;
         border-radius: 20px !important;
-        background: rgba(255,255,255,0.88) !important;
+        background: rgba(255,255,255,0.92) !important;
         box-shadow: 0 10px 26px rgba(62, 112, 148, 0.08);
-    }
+    }}
 
     div[data-testid="stTextInput"] input,
-    div[data-testid="stTextArea"] textarea {
+    div[data-testid="stTextArea"] textarea {{
         border: 1px solid #C9DDEB;
         border-radius: 13px;
         background: #FFFFFF;
         color: #294A65;
-    }
+    }}
 
-    .stButton > button {
-        min-height: 48px;
+    .stButton > button {{
+        min-height: 46px;
         border: 1px solid #C1D8E9;
         border-radius: 14px;
         background: #F4F9FD;
@@ -93,18 +155,18 @@ st.markdown(
         font-size: 1rem;
         font-weight: 700;
         transition: 0.18s ease;
-    }
+    }}
 
-    .stButton > button:hover:not(:disabled) {
+    .stButton > button:hover:not(:disabled) {{
         border-color: #8FB9D5;
         background: #E8F4FC;
         color: #234D6B;
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(61, 119, 158, 0.12);
-    }
+    }}
 
-    .stButton > button[kind="primary"] {
-        min-height: 58px;
+    .stButton > button[kind="primary"] {{
+        min-height: 60px;
         border: 1px solid #79AFCF;
         border-radius: 16px;
         background: linear-gradient(135deg, #D9EEFA, #E5F3FC);
@@ -112,84 +174,63 @@ st.markdown(
         font-size: 1.12rem;
         font-weight: 800;
         box-shadow: 0 7px 18px rgba(61, 119, 158, 0.10);
-    }
+    }}
 
-    [data-testid="stMetric"] {
+    [data-testid="stDownloadButton"] > button {{
+        min-height: 46px;
+        border-radius: 14px;
+        border: 1px solid #8FB9D5;
+        background: #E8F4FC;
+        color: #234D6B;
+        font-weight: 800;
+    }}
+
+    [data-testid="stMetric"] {{
         border: 1px solid #D4E5F1;
         border-radius: 17px;
-        background: rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.94);
         padding: 14px;
-    }
+    }}
 
-    [data-testid="stAlert"] {
+    [data-testid="stAlert"] {{
         border-radius: 15px;
-    }
+    }}
 
-    hr {
+    hr {{
         border-color: #D4E5F1;
-    }
+    }}
 
-    .hero {
-        position: relative;
-        overflow: hidden;
-        min-height: 355px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 55px 28px;
-        margin: 20px 0 28px 0;
-        border: 1px solid #C9E0EF;
-        border-radius: 30px;
-        background: linear-gradient(135deg, #E5F3FC 0%, #F4FAFE 52%, #DCEFFA 100%);
-        box-shadow: 0 18px 42px rgba(48, 105, 145, 0.12);
-        text-align: center;
-    }
-
-    .neuron-pattern {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        opacity: .48;
-        pointer-events: none;
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 1;
-        max-width: 800px;
-    }
-
-    .hero-title {
+    .hero-title {{
         color: #214D6C;
-        font-size: clamp(3.8rem, 9vw, 6.5rem);
+        font-family: "Nunito Sans", "Segoe UI", sans-serif;
+        font-size: clamp(3.8rem, 9vw, 6.7rem);
         font-weight: 800;
         line-height: 1;
         letter-spacing: .035em;
-        margin-bottom: 22px;
         text-shadow: 0 3px 14px rgba(255,255,255,.75);
-    }
+    }}
 
-    .hero-subtitle {
-        max-width: 720px;
-        margin: 0 auto;
+    .hero-subtitle {{
+        max-width: 760px;
+        margin: 20px auto 0 auto;
         color: #476B85;
-        font-size: 1.25rem;
+        font-family: "Nunito Sans", "Segoe UI", sans-serif;
+        font-size: 1.2rem;
         line-height: 1.7;
-    }
+    }}
 
-    .developer-name {
+    .developer-name {{
         margin-top: 12px;
         color: #294A65;
         font-size: 1.15rem;
         font-weight: 800;
         text-align: center;
-    }
+    }}
 
-    .developer-role {
+    .developer-role {{
         color: #648198;
         text-align: center;
-    }
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -197,8 +238,35 @@ st.markdown(
 
 
 # -------------------------------------------------------------------
-# Навигация
+# Навигация и каталог
 # -------------------------------------------------------------------
+
+TECHNIQUES = {
+    "decision_tree": {
+        "title": "Дерево решений",
+        "short": "Разложить сложный выбор на варианты и возможные последствия.",
+        "description": "Сравнение вариантов решения через возможные исходы, вероятности и личную оценку.",
+        "icon": "🌿",
+    },
+    "dbt_chain": {
+        "title": "Цепочный анализ поведения (ДБТ)",
+        "short": "Исследовать последовательность событий, реакций и последствий.",
+        "description": "Карта контекста, звеньев цепочки и возможных точек вмешательства.",
+        "icon": "🔗",
+    },
+    "exposure": {
+        "title": "Иерархия экспозиции",
+        "short": "Составить и обсудить лестницу ситуаций для постепенной практики.",
+        "description": "Планирование ситуаций, прогнозов, посильных шагов и наблюдений.",
+        "icon": "🪜",
+    },
+    "act_matrix": {
+        "title": "ACT-матрица",
+        "short": "Исследовать действия «от дискомфорта» и шаги «к ценностям».",
+        "description": "Визуальная карта внутреннего опыта, поведения, ценностей и выбранных действий.",
+        "icon": "🧭",
+    },
+}
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
@@ -224,89 +292,311 @@ def open_technique(technique_id):
     st.session_state.page = "technique"
 
 
-techniques = {
-    "decision_tree": {
-        "title": "Дерево решений",
-        "short": "Разложить сложный выбор на варианты и возможные последствия.",
-        "description": "Сравнение вариантов решения через возможные исходы, вероятности и личную оценку.",
-        "icon": "🌿",
-    },
-    "dbt_chain": {
-        "title": "Цепочный анализ поведения (ДБТ)",
-        "short": "Исследовать последовательность событий, реакций и последствий.",
-        "description": "Карта факторов уязвимости, запускающего события, звеньев цепочки и возможных точек вмешательства.",
-        "icon": "🔗",
-    },
-    "exposure": {
-        "title": "Иерархия экспозиции",
-        "short": "Составить и обсудить лестницу ситуаций для постепенной практики.",
-        "description": "Совместное планирование ситуаций, прогнозов, посильных шагов и наблюдений.",
-        "icon": "🪜",
-    },
-    "act_matrix": {
-        "title": "ACT-матрица",
-        "short": "Исследовать действия «от дискомфорта» и шаги «к ценностям».",
-        "description": "Визуальная карта внутреннего опыта, поведения, ценностей и выбранных действий.",
-        "icon": "🧭",
-    },
-}
-
-
 def render_navigation():
-    left, middle, right = st.columns([1, 1, 5])
+    home_col, library_col, spacer = st.columns([1.2, 1.2, 5])
 
-    with left:
+    with home_col:
         st.button("⌂ Главная", on_click=go_home, use_container_width=True)
 
-    with middle:
+    with library_col:
         st.button("Библиотека", on_click=go_library, use_container_width=True)
 
-    with right:
-        if st.session_state.page == "technique":
-            technique = techniques.get(st.session_state.selected_technique)
-            if technique:
-                st.caption(f"{technique['icon']} {technique['title']}")
+
+def safe_text(value):
+    return html.escape(str(value))
 
 
 # -------------------------------------------------------------------
-# Общие вспомогательные функции
+# Графики для PNG-экспорта
 # -------------------------------------------------------------------
 
-def esc(value):
-    return html.escape(str(value)).replace("\n", "<br>")
+def fig_to_png(fig):
+    output = BytesIO()
+    fig.savefig(
+        output,
+        format="png",
+        dpi=180,
+        bbox_inches="tight",
+        facecolor="#F7FBFE",
+    )
+    plt.close(fig)
+    output.seek(0)
+    return output.getvalue()
+
+
+def wrap_for_plot(text, width=28):
+    text = str(text or "").strip()
+    if not text:
+        return "—"
+    return "\n".join(textwrap.wrap(text, width=width))
+
+
+def draw_box(ax, x, y, width, height, title, body, color="#EAF5FB"):
+    box = FancyBboxPatch(
+        (x, y),
+        width,
+        height,
+        boxstyle="round,pad=0.02,rounding_size=0.04",
+        linewidth=1.5,
+        edgecolor="#8BB9D5",
+        facecolor=color,
+    )
+    ax.add_patch(box)
+    ax.text(
+        x + width / 2,
+        y + height * 0.70,
+        title,
+        ha="center",
+        va="center",
+        fontsize=11,
+        fontweight="bold",
+        color="#294A65",
+        wrap=True,
+    )
+    ax.text(
+        x + width / 2,
+        y + height * 0.34,
+        wrap_for_plot(body, 25),
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#476B85",
+        wrap=True,
+    )
+
+
+def make_decision_png(question, options):
+    count = max(1, sum(len(option["scenarios"]) for option in options))
+    width = max(9, min(18, 3.2 * count))
+    fig, ax = plt.subplots(figsize=(width, 7))
+    ax.set_facecolor("#F7FBFE")
+    ax.axis("off")
+
+    ax.text(
+        0.5, 0.97, "Дерево решений",
+        transform=ax.transAxes,
+        ha="center", va="top",
+        fontsize=20, fontweight="bold", color="#294A65",
+    )
+    ax.text(
+        0.5, 0.90, wrap_for_plot(question, 75),
+        transform=ax.transAxes,
+        ha="center", va="top",
+        fontsize=12, color="#476B85",
+    )
+
+    option_xs = [(i + 1) / (len(options) + 1) for i in range(len(options))]
+    root_x = 0.5
+    root_y = 0.74
+
+    ax.scatter([root_x], [root_y], s=250, color="#C99A73", zorder=3)
+    ax.text(
+        root_x, root_y - 0.06, "Решение",
+        ha="center", va="top", fontsize=9, color="#604B3D",
+    )
+
+    palette = ["#80BFE0", "#71BFA9", "#E1AE83", "#A99BD0", "#D99BB2"]
+    leaf_positions = []
+
+    for option_index, option in enumerate(options):
+        ox = option_xs[option_index]
+        color = palette[option_index % len(palette)]
+        ax.plot([root_x, ox], [root_y, 0.52], color=color, linewidth=3, zorder=1)
+        ax.scatter([ox], [0.52], s=180, color=color, zorder=3)
+        ax.text(
+            ox, 0.47,
+            wrap_for_plot(option["name"], 20),
+            ha="center", va="top", fontsize=10,
+            fontweight="bold", color="#294A65",
+        )
+        ax.text(
+            ox, 0.40,
+            f"Оценка: {option['score']:.2f}",
+            ha="center", va="top", fontsize=8, color="#54718A",
+        )
+
+        scenarios = option["scenarios"]
+        n = len(scenarios)
+        xs = [ox + (j - (n - 1) / 2) * min(0.13, 0.55 / max(n, 1)) for j in range(n)]
+
+        for j, scenario in enumerate(scenarios):
+            lx = xs[j]
+            leaf_positions.append((ox, lx, scenario, option, color, j))
+            ax.plot([ox, lx], [0.50, 0.29], color=color, linewidth=1.8)
+            ax.scatter([lx], [0.29], s=100, color=color, alpha=0.85, zorder=3)
+
+    for ox, lx, scenario, option, color, j in leaf_positions:
+        norm_probability = option["normalized"][j]
+        ax.text(
+            lx, 0.24,
+            wrap_for_plot(scenario["name"], 18),
+            ha="center", va="top", fontsize=8, color="#294A65",
+        )
+        ax.text(
+            lx, 0.13,
+            f"{norm_probability:.1f}% · оценка {scenario['score']:g}",
+            ha="center", va="top", fontsize=7, color="#54718A",
+        )
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    return fig_to_png(fig)
+
+
+def make_vertical_map_png(title, sections, note=None):
+    rows = max(1, len(sections))
+    fig, ax = plt.subplots(figsize=(10, max(5, rows * 1.55 + 1.5)))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, rows + 1)
+    ax.axis("off")
+    ax.set_facecolor("#F7FBFE")
+
+    ax.text(
+        0.5, rows + 0.78, title,
+        ha="center", va="center",
+        fontsize=19, fontweight="bold", color="#294A65",
+    )
+
+    colors = ["#EAF5FB", "#EFF8F6", "#F2F1FA", "#FFF6EC", "#FCEFF2"]
+
+    for i, (heading, body) in enumerate(sections):
+        y = rows - i - 0.15
+        draw_box(
+            ax, 0.08, y - 0.65, 0.84, 0.58,
+            heading, body, colors[i % len(colors)]
+        )
+        if i < rows - 1:
+            ax.annotate(
+                "",
+                xy=(0.5, y - 0.92),
+                xytext=(0.5, y - 0.68),
+                arrowprops=dict(arrowstyle="->", color="#7CA9C5", lw=1.6),
+            )
+
+    if note:
+        ax.text(
+            0.5, 0.02, wrap_for_plot(note, 110),
+            ha="center", va="bottom", fontsize=8, color="#648198",
+        )
+
+    return fig_to_png(fig)
+
+
+def make_act_png(situation, values, away_actions, inner_experience,
+                 toward_actions, toward_inner, next_step):
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    ax.set_facecolor("#F7FBFE")
+
+    ax.text(
+        0.5, 0.97, "ACT-матрица",
+        ha="center", va="top", fontsize=21,
+        fontweight="bold", color="#294A65",
+    )
+    ax.text(
+        0.5, 0.91, f"Ситуация: {wrap_for_plot(situation, 90)}",
+        ha="center", va="top", fontsize=10, color="#54718A",
+    )
+    ax.text(
+        0.5, 0.85, f"Что важно: {wrap_for_plot(values, 90)}",
+        ha="center", va="top", fontsize=10, color="#54718A",
+    )
+
+    # Сетка квадрантов
+    ax.plot([0.5, 0.5], [0.12, 0.78], color="#9DBBD0", linewidth=2)
+    ax.plot([0.08, 0.92], [0.45, 0.45], color="#9DBBD0", linewidth=2)
+
+    quadrants = [
+        (0.08, 0.48, "Действия «от дискомфорта»", away_actions, "#FFF1F1"),
+        (0.52, 0.48, "Действия «к важному»", toward_actions, "#EAF7F1"),
+        (0.08, 0.14, "Внутренний опыт", inner_experience, "#F2F5FC"),
+        (0.52, 0.14, "Внутренний опыт при движении к важному", toward_inner, "#EFF8FC"),
+    ]
+
+    for x, y, heading, body, color in quadrants:
+        draw_box(ax, x, y, 0.40, 0.28, heading, body, color)
+
+    ax.text(
+        0.5, 0.075, f"Выбранный небольшой шаг: {wrap_for_plot(next_step, 100)}",
+        ha="center", va="center", fontsize=10,
+        fontweight="bold", color="#315773",
+    )
+
+    return fig_to_png(fig)
+
+
+def download_png(label, data, filename, key):
+    st.download_button(
+        label=label,
+        data=data,
+        file_name=filename,
+        mime="image/png",
+        key=key,
+        use_container_width=True,
+    )
+
+
+# -------------------------------------------------------------------
+# Дерево решений
+# -------------------------------------------------------------------
+
+def new_scenario(first=False):
+    return {"id": uuid.uuid4().hex, "default_probability": 100 if first else 0}
+
+
+def new_option():
+    return {"id": uuid.uuid4().hex, "scenarios": [new_scenario(first=True)]}
+
+
+def decision_clear_result():
+    st.session_state.decision_result = None
 
 
 def initialize_decision_tree():
     if "dt_options" not in st.session_state:
         st.session_state.dt_options = [new_option(), new_option()]
-
-    if "decision_calculation" not in st.session_state:
-        st.session_state.decision_calculation = None
-
+    if "decision_result" not in st.session_state:
+        st.session_state.decision_result = None
     if "decision_question" not in st.session_state:
         st.session_state.decision_question = ""
 
 
-def clear_decision_result():
-    st.session_state.decision_calculation = None
+def add_decision_option():
+    st.session_state.dt_options.append(new_option())
+    decision_clear_result()
 
 
-def new_scenario(first=False):
-    return {
-        "id": uuid.uuid4().hex,
-        "default_probability": 100 if first else 0,
-    }
+def delete_decision_option(option_id):
+    if len(st.session_state.dt_options) <= 2:
+        return
+    st.session_state.dt_options = [
+        item for item in st.session_state.dt_options if item["id"] != option_id
+    ]
+    decision_clear_result()
 
 
-def new_option():
-    return {
-        "id": uuid.uuid4().hex,
-        "scenarios": [new_scenario(first=True)],
-    }
+def add_decision_scenario(option_id):
+    for option in st.session_state.dt_options:
+        if option["id"] == option_id:
+            option["scenarios"].append(new_scenario())
+            decision_clear_result()
+            break
+
+
+def delete_decision_scenario(option_id, scenario_id):
+    for option in st.session_state.dt_options:
+        if option["id"] == option_id and len(option["scenarios"]) > 1:
+            option["scenarios"] = [
+                item for item in option["scenarios"] if item["id"] != scenario_id
+            ]
+            decision_clear_result()
+            break
 
 
 def option_name_key(option_id):
-    return f"dt_option_name_{option_id}"
+    return f"dt_name_{option_id}"
 
 
 def scenario_name_key(scenario_id):
@@ -321,258 +611,6 @@ def score_key(scenario_id):
     return f"dt_score_{scenario_id}"
 
 
-def add_decision_option():
-    st.session_state.dt_options.append(new_option())
-    clear_decision_result()
-
-
-def delete_decision_option(option_id):
-    if len(st.session_state.dt_options) <= 2:
-        return
-
-    st.session_state.dt_options = [
-        option for option in st.session_state.dt_options
-        if option["id"] != option_id
-    ]
-    clear_decision_result()
-
-
-def add_decision_scenario(option_id):
-    for option in st.session_state.dt_options:
-        if option["id"] == option_id:
-            option["scenarios"].append(new_scenario())
-            clear_decision_result()
-            return
-
-
-def delete_decision_scenario(option_id, scenario_id):
-    for option in st.session_state.dt_options:
-        if option["id"] == option_id and len(option["scenarios"]) > 1:
-            option["scenarios"] = [
-                scenario for scenario in option["scenarios"]
-                if scenario["id"] != scenario_id
-            ]
-            clear_decision_result()
-            return
-
-
-# -------------------------------------------------------------------
-# Дерево решений: SVG
-# -------------------------------------------------------------------
-
-def wrap_svg_label(value, width=22, max_lines=2):
-    lines = textwrap.wrap(str(value), width=width) or [""]
-    if len(lines) > max_lines:
-        lines = lines[:max_lines]
-        lines[-1] = lines[-1][: max(1, width - 1)] + "…"
-    return lines
-
-
-def build_tree_svg(options, best_name, question):
-    leaf_w = 205
-    leaf_gap = 30
-    group_gap = 58
-
-    leaf_y = 140
-    option_y = 400
-    trunk_fork_y = 525
-    root_card_y = 652
-    svg_height = 755
-
-    group_widths = [
-        max(
-            leaf_w,
-            len(option["scenarios"]) * leaf_w
-            + (len(option["scenarios"]) - 1) * leaf_gap,
-        )
-        for option in options
-    ]
-
-    svg_width = 100 + sum(group_widths) + group_gap * max(0, len(options) - 1)
-
-    groups = []
-    cursor_x = 50
-
-    for index, option in enumerate(options):
-        group_width = group_widths[index]
-        scenario_count = len(option["scenarios"])
-        content_width = scenario_count * leaf_w + (scenario_count - 1) * leaf_gap
-        first_leaf_x = cursor_x + (group_width - content_width) / 2
-
-        leaf_centers = [
-            first_leaf_x + i * (leaf_w + leaf_gap) + leaf_w / 2
-            for i in range(scenario_count)
-        ]
-
-        groups.append({
-            "option": option,
-            "center_x": cursor_x + group_width / 2,
-            "leaf_centers": leaf_centers,
-        })
-
-        cursor_x += group_width + group_gap
-
-    root_x = (groups[0]["center_x"] + groups[-1]["center_x"]) / 2
-    colors = ["#80BFE0", "#71BFA9", "#E1AE83", "#A99BD0", "#D99BB2"]
-
-    parts = [f"""
-    <svg xmlns="http://www.w3.org/2000/svg"
-         width="{svg_width}" height="{svg_height}"
-         viewBox="0 0 {svg_width} {svg_height}"
-         role="img" aria-label="Дерево решений">
-      <defs>
-        <linearGradient id="wood" x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0%" stop-color="#A97F60"/>
-          <stop offset="50%" stop-color="#C99A73"/>
-          <stop offset="100%" stop-color="#A97F60"/>
-        </linearGradient>
-        <filter id="tree-shadow" x="-30%" y="-30%" width="160%" height="170%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5"
-                        flood-color="#54738A" flood-opacity="0.14"/>
-        </filter>
-      </defs>
-      <rect width="100%" height="100%" rx="24" fill="#F8FBFD"/>
-    """]
-
-    for index, group in enumerate(groups):
-        option = group["option"]
-        color = "#65AD91" if option["name"] == best_name else colors[index % len(colors)]
-        option_x = group["center_x"]
-
-        parts.append(f"""
-          <path d="M {root_x} {trunk_fork_y}
-                   C {root_x} {trunk_fork_y - 65},
-                     {option_x} {option_y + 125},
-                     {option_x} {option_y + 20}"
-                fill="none" stroke="{color}" stroke-width="9"
-                stroke-linecap="round"/>
-        """)
-
-        for leaf_x in group["leaf_centers"]:
-            parts.append(f"""
-              <path d="M {option_x} {option_y - 18}
-                       C {option_x} {option_y - 95},
-                         {leaf_x} {leaf_y + 100},
-                         {leaf_x} {leaf_y + 24}"
-                    fill="none" stroke="{color}" stroke-width="5"
-                    stroke-linecap="round"/>
-            """)
-
-    parts.append(f"""
-      <path d="M {root_x} {root_card_y}
-               C {root_x - 8} {root_card_y - 35},
-                 {root_x + 10} {trunk_fork_y + 55},
-                 {root_x} {trunk_fork_y}"
-            fill="none" stroke="url(#wood)" stroke-width="22"
-            stroke-linecap="round"/>
-    """)
-
-    for index, group in enumerate(groups):
-        option = group["option"]
-        color = "#65AD91" if option["name"] == best_name else colors[index % len(colors)]
-        option_x = group["center_x"]
-        option_label = html.escape(option["name"])
-        if len(option_label) > 30:
-            option_label = option_label[:29] + "…"
-
-        parts.append(f"""
-          <circle cx="{option_x}" cy="{option_y}" r="18"
-                  fill="{color}" stroke="#FFFFFF" stroke-width="5"
-                  filter="url(#tree-shadow)"/>
-          <rect x="{option_x - 116}" y="{option_y + 28}"
-                width="232" height="68" rx="18"
-                fill="#FFFFFF" stroke="{color}" stroke-width="2"
-                filter="url(#tree-shadow)"/>
-          <text x="{option_x}" y="{option_y + 54}" text-anchor="middle"
-                font-family="Nunito Sans, Arial, sans-serif"
-                font-size="14" font-weight="800" fill="#36546C">
-            {option_label}
-          </text>
-          <text x="{option_x}" y="{option_y + 78}" text-anchor="middle"
-                font-family="Nunito Sans, Arial, sans-serif"
-                font-size="12" fill="#58748A">
-            Итоговая оценка: {option["score"]:.2f}
-          </text>
-        """)
-
-        for scenario_index, scenario in enumerate(option["scenarios"]):
-            leaf_x = group["leaf_centers"][scenario_index]
-            probability = option["normalized"][scenario_index]
-            lines = wrap_svg_label(scenario["name"])
-
-            parts.append(f"""
-              <circle cx="{leaf_x}" cy="{leaf_y}" r="22"
-                      fill="{color}" fill-opacity="0.78"
-                      stroke="{color}" stroke-width="3"
-                      filter="url(#tree-shadow)"/>
-              <circle cx="{leaf_x}" cy="{leaf_y}" r="14"
-                      fill="none" stroke="#FFFFFF" stroke-opacity="0.78"
-                      stroke-width="2"/>
-            """)
-
-            card_y = leaf_y + 38
-            parts.append(f"""
-              <rect x="{leaf_x - 96}" y="{card_y}" width="192" height="76"
-                    rx="16" fill="#FFFFFF" fill-opacity="0.97"
-                    stroke="{color}" stroke-opacity="0.72" stroke-width="1.5"/>
-            """)
-
-            for line_index, line in enumerate(lines):
-                parts.append(f"""
-                  <text x="{leaf_x}" y="{card_y + 23 + line_index * 17}"
-                        text-anchor="middle"
-                        font-family="Nunito Sans, Arial, sans-serif"
-                        font-size="12" font-weight="700" fill="#36546C">
-                    {html.escape(line)}
-                  </text>
-                """)
-
-            parts.append(f"""
-              <text x="{leaf_x}" y="{card_y + 63}" text-anchor="middle"
-                    font-family="Nunito Sans, Arial, sans-serif"
-                    font-size="11" fill="#58748A">
-                {probability:.1f}% · оценка {scenario["score"]:g}
-              </text>
-            """)
-
-    question_lines = wrap_svg_label(question, width=42, max_lines=2)
-    root_box_width = 390
-    root_box_height = 66
-
-    parts.append(f"""
-      <rect x="{root_x - root_box_width / 2}" y="{root_card_y}"
-            width="{root_box_width}" height="{root_box_height}" rx="23"
-            fill="#F4D6B8" stroke="#D8A77E" stroke-width="2"
-            filter="url(#tree-shadow)"/>
-    """)
-
-    first_text_y = root_card_y + (27 if len(question_lines) == 1 else 23)
-
-    for line_index, line in enumerate(question_lines):
-        parts.append(f"""
-          <text x="{root_x}" y="{first_text_y + line_index * 19}"
-                text-anchor="middle"
-                font-family="Nunito Sans, Arial, sans-serif"
-                font-size="15" font-weight="800" fill="#604B3D">
-            {html.escape(line)}
-          </text>
-        """)
-
-    parts.append("</svg>")
-
-    return f"""
-    <div style="width:100%; overflow-x:auto; border:1px solid #DCE8F0;
-                border-radius:24px; background:#F8FBFD; padding:12px;
-                box-sizing:border-box;">
-        {''.join(parts)}
-    </div>
-    """
-
-
-# -------------------------------------------------------------------
-# Дерево решений: интерфейс
-# -------------------------------------------------------------------
-
 def render_decision_tree():
     initialize_decision_tree()
 
@@ -583,13 +621,12 @@ def render_decision_tree():
         "Какое решение нужно принять?",
         key="decision_question",
         placeholder="Например: «Стоит ли менять работу?»",
-        on_change=clear_decision_result,
+        on_change=decision_clear_result,
     )
 
-    st.subheader("Добавьте варианты")
-    st.caption("Для каждого варианта укажите возможные исходы, вероятность и оценку для вас.")
+    st.caption("Для каждого варианта добавьте возможные исходы, вероятности и личную оценку.")
 
-    for option_index, option in enumerate(list(st.session_state.dt_options)):
+    for option_index, option in enumerate(list(st.session_state.dt_options), start=1):
         option_id = option["id"]
         name_key = option_name_key(option_id)
 
@@ -597,15 +634,13 @@ def render_decision_tree():
             st.session_state[name_key] = ""
 
         with st.container(border=True):
-            title_col, delete_col = st.columns([5, 1.7])
-
+            title_col, delete_col = st.columns([5, 1.5])
             with title_col:
-                st.markdown(f"### Вариант {option_index + 1}")
-
+                st.markdown(f"### Вариант {option_index}")
             with delete_col:
                 st.button(
                     "Удалить вариант",
-                    key=f"delete_option_{option_id}",
+                    key=f"dt_delete_option_{option_id}",
                     disabled=len(st.session_state.dt_options) <= 2,
                     on_click=delete_decision_option,
                     args=(option_id,),
@@ -615,204 +650,178 @@ def render_decision_tree():
             st.text_input(
                 "Название варианта",
                 key=name_key,
-                placeholder=f"Например: «Вариант {option_index + 1}»",
-                on_change=clear_decision_result,
+                placeholder=f"Вариант {option_index}",
+                on_change=decision_clear_result,
             )
 
-            for scenario_index, scenario in enumerate(list(option["scenarios"])):
-                scenario_id = scenario["id"]
-                scenario_name_state = scenario_name_key(scenario_id)
-                probability_state = probability_key(scenario_id)
-                score_state = score_key(scenario_id)
+            for scenario_index, scenario in enumerate(list(option["scenarios"]), start=1):
+                sid = scenario["id"]
+                nkey, pkey, skey = (
+                    scenario_name_key(sid),
+                    probability_key(sid),
+                    score_key(sid),
+                )
 
-                if scenario_name_state not in st.session_state:
-                    st.session_state[scenario_name_state] = ""
-                if probability_state not in st.session_state:
-                    st.session_state[probability_state] = scenario["default_probability"]
-                if score_state not in st.session_state:
-                    st.session_state[score_state] = 0.0
+                if nkey not in st.session_state:
+                    st.session_state[nkey] = ""
+                if pkey not in st.session_state:
+                    st.session_state[pkey] = scenario["default_probability"]
+                if skey not in st.session_state:
+                    st.session_state[skey] = 0.0
 
                 with st.container(border=True):
-                    scenario_title, scenario_delete = st.columns([5, 1.7])
-
-                    with scenario_title:
-                        st.markdown(f"**Сценарий {scenario_index + 1}**")
-
-                    with scenario_delete:
+                    head, delete = st.columns([5, 1.5])
+                    with head:
+                        st.markdown(f"**Сценарий {scenario_index}**")
+                    with delete:
                         st.button(
-                            "Удалить сценарий",
-                            key=f"delete_scenario_{scenario_id}",
+                            "Удалить",
+                            key=f"dt_delete_scenario_{sid}",
                             disabled=len(option["scenarios"]) <= 1,
                             on_click=delete_decision_scenario,
-                            args=(option_id, scenario_id),
+                            args=(option_id, sid),
                             use_container_width=True,
                         )
 
                     st.text_input(
                         "Описание возможного исхода",
-                        key=scenario_name_state,
+                        key=nkey,
                         placeholder="Например: «Найду более интересную работу»",
-                        on_change=clear_decision_result,
+                        on_change=decision_clear_result,
                     )
 
-                    probability_col, score_col = st.columns(2)
-
-                    with probability_col:
+                    c1, c2 = st.columns(2)
+                    with c1:
                         st.slider(
                             "Вероятность, %",
-                            min_value=0,
-                            max_value=100,
-                            step=1,
-                            key=probability_state,
-                            on_change=clear_decision_result,
+                            0, 100, step=1,
+                            key=pkey,
+                            on_change=decision_clear_result,
                         )
-
-                    with score_col:
+                    with c2:
                         st.slider(
                             "Оценка исхода",
-                            min_value=-5.0,
-                            max_value=5.0,
-                            step=0.5,
-                            key=score_state,
-                            help="−5 — очень нежелательный исход, +5 — очень желательный.",
-                            on_change=clear_decision_result,
+                            -5.0, 5.0, step=0.5,
+                            key=skey,
+                            help="−5 — очень нежелательный, +5 — очень желательный.",
+                            on_change=decision_clear_result,
                         )
 
             st.button(
                 "＋ Добавить сценарий",
-                key=f"add_scenario_{option_id}",
+                key=f"dt_add_scenario_{option_id}",
                 on_click=add_decision_scenario,
                 args=(option_id,),
             )
 
-    add_col, remove_col, _ = st.columns([1.7, 1.8, 4])
-
-    with add_col:
+    c1, c2, _ = st.columns([1.6, 1.8, 4])
+    with c1:
         st.button(
             "＋ Добавить вариант",
-            key="add_decision_option",
+            key="dt_add_option",
             on_click=add_decision_option,
             use_container_width=True,
         )
-
-    with remove_col:
+    with c2:
         st.button(
             "− Удалить последний",
-            key="remove_last_decision_option",
+            key="dt_remove_last",
             disabled=len(st.session_state.dt_options) <= 2,
             on_click=delete_decision_option,
             args=(st.session_state.dt_options[-1]["id"],),
             use_container_width=True,
         )
 
-    st.divider()
-
     if st.button("Рассчитать и построить дерево", type="primary", use_container_width=True):
         question = st.session_state.decision_question.strip()
+        prepared = []
         error = None
-        prepared_options = []
         used_names = set()
 
         if not question:
             error = "Сначала сформулируйте решение."
 
-        for option_index, option in enumerate(st.session_state.dt_options):
+        for oi, option in enumerate(st.session_state.dt_options, start=1):
             if error:
                 break
 
-            option_name = st.session_state[option_name_key(option["id"])].strip()
-
-            if not option_name:
-                error = f"Введите название варианта {option_index + 1}."
+            name = st.session_state.get(option_name_key(option["id"]), "").strip()
+            if not name:
+                error = f"Введите название варианта {oi}."
                 break
-
-            if option_name in used_names:
-                error = f"Названия вариантов должны отличаться: «{option_name}»."
+            if name in used_names:
+                error = f"Названия вариантов должны отличаться: «{name}»."
                 break
+            used_names.add(name)
 
-            used_names.add(option_name)
             scenarios = []
-
-            for scenario_index, scenario in enumerate(option["scenarios"]):
-                scenario_name = st.session_state[scenario_name_key(scenario["id"])].strip()
-
-                if not scenario_name:
-                    error = (
-                        f"Заполните описание сценария {scenario_index + 1} "
-                        f"в варианте «{option_name}»."
-                    )
+            for si, scenario in enumerate(option["scenarios"], start=1):
+                sid = scenario["id"]
+                sname = st.session_state.get(scenario_name_key(sid), "").strip()
+                if not sname:
+                    error = f"Заполните сценарий {si} варианта «{name}»."
                     break
-
                 scenarios.append({
-                    "name": scenario_name,
-                    "probability": int(st.session_state[probability_key(scenario["id"])]),
-                    "score": float(st.session_state[score_key(scenario["id"])]),
+                    "name": sname,
+                    "probability": int(st.session_state[probability_key(sid)]),
+                    "score": float(st.session_state[score_key(sid)]),
                 })
 
             if error:
                 break
 
-            total_probability = sum(item["probability"] for item in scenarios)
-
-            if total_probability == 0:
-                error = (
-                    f"В варианте «{option_name}» задайте ненулевую вероятность "
-                    "хотя бы одному сценарию."
-                )
+            total = sum(s["probability"] for s in scenarios)
+            if total <= 0:
+                error = f"Для варианта «{name}» задайте ненулевую вероятность."
                 break
 
-            normalized = [
-                item["probability"] / total_probability * 100
-                for item in scenarios
-            ]
-
-            expected_score = sum(
-                normalized[index] / 100 * item["score"]
-                for index, item in enumerate(scenarios)
+            normalized = [s["probability"] / total * 100 for s in scenarios]
+            expected = sum(
+                normalized[i] / 100 * scenario["score"]
+                for i, scenario in enumerate(scenarios)
             )
 
-            prepared_options.append({
-                "name": option_name,
+            prepared.append({
+                "name": name,
                 "scenarios": scenarios,
                 "normalized": normalized,
-                "score": expected_score,
+                "score": expected,
             })
 
         if error:
-            st.session_state.decision_calculation = None
+            st.session_state.decision_result = None
             st.warning(error)
         else:
-            best_name = max(prepared_options, key=lambda item: item["score"])["name"]
-            st.session_state.decision_calculation = {
+            best_name = max(prepared, key=lambda x: x["score"])["name"]
+            st.session_state.decision_result = {
                 "question": question,
-                "options": prepared_options,
+                "options": prepared,
                 "best_name": best_name,
             }
 
-    result = st.session_state.decision_calculation
-
+    result = st.session_state.decision_result
     if result:
         st.subheader("Результат")
-        st.write(f"**Решение:** {result['question']}")
-
-        metric_columns = st.columns(len(result["options"]))
-        for column, option in zip(metric_columns, result["options"]):
-            with column:
-                label = f"🌿 {option['name']}" if option["name"] == result["best_name"] else option["name"]
-                st.metric(label=label, value=f"{option['score']:.2f} / 5")
+        columns = st.columns(len(result["options"]))
+        for col, option in zip(columns, result["options"]):
+            with col:
+                st.metric(
+                    label=("🌿 " if option["name"] == result["best_name"] else "") + option["name"],
+                    value=f"{option['score']:.2f} / 5",
+                )
 
         st.success(f"По указанным оценкам лидирует вариант: **{result['best_name']}**.")
         st.caption(
             "Это ориентир для размышления, а не автоматическое решение. "
-            "Вероятности сценариев нормализуются отдельно внутри каждого варианта."
+            "Вероятности нормализуются отдельно внутри каждого варианта."
         )
 
-        st.subheader("Дерево возможных исходов")
-        components.html(
-            build_tree_svg(result["options"], result["best_name"], result["question"]),
-            height=780,
-            scrolling=True,
+        image = make_decision_png(
+            result["question"],
+            result["options"],
         )
+        st.image(image, use_container_width=True)
+        download_png("⬇️ Скачать дерево решений PNG", image, "derevo-resheniy.png", "download_decision")
 
 
 # -------------------------------------------------------------------
@@ -834,172 +843,121 @@ def add_chain_link():
 def remove_chain_link(link_id):
     if len(st.session_state.chain_links) > 1:
         st.session_state.chain_links = [
-            item for item in st.session_state.chain_links
-            if item["id"] != link_id
+            x for x in st.session_state.chain_links if x["id"] != link_id
         ]
 
 
-def render_chain_analysis():
+def render_chain():
     initialize_chain()
 
     st.title("🔗 Цепочный анализ поведения (ДБТ)")
-    st.write("Совместно исследуйте контекст, последовательность реакций, целевое поведение и его последствия.")
+    st.write("Совместно исследуйте контекст, звенья цепочки и последствия.")
+    st.info("Можно сделать паузу, пропустить поле или остановиться в любой момент.")
 
-    st.info(
-        "Если обсуждение становится слишком интенсивным, можно сделать паузу, "
-        "пропустить поле или остановиться."
-    )
-
-    vulnerability = st.text_area(
+    st.text_area(
         "Факторы уязвимости",
         key="chain_vulnerability",
-        placeholder="Что могло сделать ситуацию сложнее заранее? Например, недосып, голод, напряжение.",
+        placeholder="Что могло сделать ситуацию сложнее заранее?",
     )
-
-    prompting_event = st.text_area(
+    st.text_area(
         "Запускающее событие",
         key="chain_prompt",
-        placeholder="Что произошло непосредственно перед поведением? Опишите наблюдаемые факты.",
+        placeholder="Что произошло непосредственно перед поведением? Опишите факты.",
     )
 
     st.subheader("Звенья цепочки")
-    st.caption(
-        "Добавляйте звенья по порядку: мысли, эмоции, ощущения в теле, "
-        "импульсы или действия."
-    )
-
     for index, link in enumerate(list(st.session_state.chain_links), start=1):
-        link_id = link["id"]
-
+        lid = link["id"]
         with st.container(border=True):
-            header, delete_col = st.columns([5, 1.5])
-            with header:
+            head, delete = st.columns([5, 1.2])
+            with head:
                 st.markdown(f"**Звено {index}**")
-            with delete_col:
+            with delete:
                 st.button(
                     "Удалить",
-                    key=f"chain_delete_{link_id}",
+                    key=f"chain_del_{lid}",
                     disabled=len(st.session_state.chain_links) <= 1,
                     on_click=remove_chain_link,
-                    args=(link_id,),
+                    args=(lid,),
                     use_container_width=True,
                 )
 
-            col1, col2 = st.columns(2)
-            with col1:
-                st.text_area(
-                    "Мысли или образы",
-                    key=f"chain_thought_{link_id}",
-                    placeholder="Что промелькнуло в голове?",
-                )
-                st.text_area(
-                    "Ощущения в теле",
-                    key=f"chain_body_{link_id}",
-                    placeholder="Что происходило в теле?",
-                )
-            with col2:
-                st.text_area(
-                    "Эмоции",
-                    key=f"chain_emotion_{link_id}",
-                    placeholder="Что вы чувствовали?",
-                )
-                st.text_area(
-                    "Импульсы или действия",
-                    key=f"chain_action_{link_id}",
-                    placeholder="Что захотелось сделать или что вы сделали?",
-                )
+            c1, c2 = st.columns(2)
+            with c1:
+                st.text_area("Мысли или образы", key=f"chain_thought_{lid}")
+                st.text_area("Ощущения в теле", key=f"chain_body_{lid}")
+            with c2:
+                st.text_area("Эмоции", key=f"chain_emotion_{lid}")
+                st.text_area("Импульсы или действия", key=f"chain_action_{lid}")
 
             st.slider(
-                "Насколько интенсивным было это звено? (необязательно)",
-                min_value=0,
-                max_value=10,
-                value=0,
-                key=f"chain_intensity_{link_id}",
+                "Интенсивность (необязательно)",
+                0, 10, 0,
+                key=f"chain_intensity_{lid}",
             )
-
             st.checkbox(
-                "Обсудить это звено как возможную точку вмешательства",
-                key=f"chain_intervention_{link_id}",
+                "Отметить как возможную точку вмешательства",
+                key=f"chain_intervention_{lid}",
             )
-
             st.text_area(
-                "Какой другой шаг, навык или поддержка могли бы здесь помочь?",
-                key=f"chain_skill_{link_id}",
-                placeholder="Заполняйте по желанию вместе со специалистом.",
+                "Возможный другой шаг, навык или поддержка",
+                key=f"chain_skill_{lid}",
             )
 
-    st.button(
-        "＋ Добавить звено",
-        on_click=add_chain_link,
-        use_container_width=False,
-    )
+    st.button("＋ Добавить звено", on_click=add_chain_link)
 
     st.subheader("Целевое поведение и последствия")
-    target = st.text_area(
-        "Какое конкретное поведение разбираете?",
-        key="chain_target",
-        placeholder="Опишите поведение нейтрально и конкретно.",
-    )
+    st.text_area("Целевое поведение", key="chain_target")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.text_area("Последствия сразу после", key="chain_immediate")
+    with c2:
+        st.text_area("Последствия позднее", key="chain_later")
+    st.text_area("Восстановление ситуации или снижение последствий", key="chain_repair")
 
-    immediate, later = st.columns(2)
-    with immediate:
-        st.text_area(
-            "Последствия сразу после",
-            key="chain_immediate",
-            placeholder="Что изменилось сразу после поведения?",
-        )
-    with later:
-        st.text_area(
-            "Последствия позднее",
-            key="chain_later",
-            placeholder="Какие последствия проявились позже?",
-        )
+    if st.checkbox("Показать сводную карту", value=True, key="chain_summary_toggle"):
+        sections = [
+            ("Факторы уязвимости", st.session_state.get("chain_vulnerability", "")),
+            ("Запускающее событие", st.session_state.get("chain_prompt", "")),
+        ]
 
-    st.text_area(
-        "Восстановление ситуации или снижение последствий",
-        key="chain_repair",
-        placeholder="Есть ли что-то, что хотелось бы сделать для восстановления или поддержки?",
-    )
+        for index, link in enumerate(st.session_state.chain_links, start=1):
+            lid = link["id"]
+            body = "\n".join(
+                f"{label}: {st.session_state.get(key, '')}"
+                for label, key in [
+                    ("Мысли", f"chain_thought_{lid}"),
+                    ("Эмоции", f"chain_emotion_{lid}"),
+                    ("Ощущения", f"chain_body_{lid}"),
+                    ("Импульсы / действия", f"chain_action_{lid}"),
+                ]
+                if st.session_state.get(key, "").strip()
+            )
+            if st.session_state.get(f"chain_intervention_{lid}", False):
+                body += "\n[Отмечено как возможная точка вмешательства]"
+                skill = st.session_state.get(f"chain_skill_{lid}", "").strip()
+                if skill:
+                    body += f"\nВозможная поддержка: {skill}"
+            sections.append((f"Звено {index}", body))
 
-    if st.checkbox("Показать сводную карту цепочки", value=True, key="chain_show_summary"):
-        st.markdown("### Сводная карта")
+        sections.extend([
+            ("Целевое поведение", st.session_state.get("chain_target", "")),
+            ("Последствия сразу после", st.session_state.get("chain_immediate", "")),
+            ("Последствия позднее", st.session_state.get("chain_later", "")),
+            ("Восстановление / поддержка", st.session_state.get("chain_repair", "")),
+        ])
 
         with st.container(border=True):
-            st.markdown("**Факторы уязвимости**")
-            st.write(vulnerability or "Пока не заполнено")
+            for heading, body in sections:
+                st.markdown(f"**{heading}**")
+                st.write(body or "—")
 
-            st.markdown("↓ **Запускающее событие**")
-            st.write(prompting_event or "Пока не заполнено")
-
-            for index, link in enumerate(st.session_state.chain_links, start=1):
-                link_id = link["id"]
-                st.markdown(f"↓ **Звено {index}**")
-
-                values = [
-                    ("Мысли", st.session_state.get(f"chain_thought_{link_id}", "")),
-                    ("Эмоции", st.session_state.get(f"chain_emotion_{link_id}", "")),
-                    ("Ощущения в теле", st.session_state.get(f"chain_body_{link_id}", "")),
-                    ("Импульсы / действия", st.session_state.get(f"chain_action_{link_id}", "")),
-                ]
-
-                for label, value in values:
-                    if value:
-                        st.write(f"**{label}:** {value}")
-
-                if st.session_state.get(f"chain_intervention_{link_id}", False):
-                    st.success("Отмечено как возможная точка вмешательства.")
-                    skill = st.session_state.get(f"chain_skill_{link_id}", "")
-                    if skill:
-                        st.write(f"**Возможная поддержка:** {skill}")
-
-            st.markdown("↓ **Целевое поведение**")
-            st.write(target or "Пока не заполнено")
-
-            st.markdown("**Последствия сразу:**")
-            st.write(st.session_state.get("chain_immediate", "") or "Пока не заполнено")
-
-            st.markdown("**Последствия позднее:**")
-            st.write(st.session_state.get("chain_later", "") or "Пока не заполнено")
+        png = make_vertical_map_png(
+            "Цепочный анализ поведения",
+            sections,
+            "Карта для обсуждения; связи и гипотезы определяются участниками.",
+        )
+        download_png("⬇️ Скачать карту цепочки PNG", png, "cepochniy-analiz.png", "download_chain")
 
 
 # -------------------------------------------------------------------
@@ -1022,8 +980,7 @@ def add_exposure_step():
 def remove_exposure_step(step_id):
     if len(st.session_state.exposure_steps) > 1:
         st.session_state.exposure_steps = [
-            step for step in st.session_state.exposure_steps
-            if step["id"] != step_id
+            x for x in st.session_state.exposure_steps if x["id"] != step_id
         ]
 
 
@@ -1031,119 +988,99 @@ def render_exposure():
     initialize_exposure()
 
     st.title("🪜 Иерархия экспозиции")
-    st.write("Составьте с клиентом лестницу ситуаций для обсуждения и планирования постепенной практики.")
-
+    st.write("Составьте лестницу ситуаций для обсуждения и планирования практики.")
     st.info(
         "Практика должна быть добровольной и согласованной со специалистом. "
         "Не используйте упражнение для ситуаций с реальной опасностью."
     )
 
-    st.text_area(
-        "Цель работы",
-        key="exposure_goal",
-        placeholder="Например: «Увереннее участвовать в рабочих обсуждениях».",
-    )
+    st.text_area("Цель работы", key="exposure_goal")
 
-    st.subheader("Ступени")
-    st.caption(
-        "Оценка тревоги помогает организовать обсуждение, но не назначает "
-        "автоматически порядок или обязательный первый шаг."
-    )
-
-    items = []
-
-    for index, step in enumerate(list(st.session_state.exposure_steps), start=1):
-        step_id = step["id"]
-
-        if f"exposure_distress_{step_id}" not in st.session_state:
-            st.session_state[f"exposure_distress_{step_id}"] = 3
-
+    records = []
+    for index, item in enumerate(list(st.session_state.exposure_steps), start=1):
+        sid = item["id"]
         with st.container(border=True):
-            header, delete_col = st.columns([5, 1.5])
-
-            with header:
+            head, delete = st.columns([5, 1.2])
+            with head:
                 st.markdown(f"**Ступень {index}**")
-
-            with delete_col:
+            with delete:
                 st.button(
                     "Удалить",
-                    key=f"exposure_delete_{step_id}",
+                    key=f"exposure_del_{sid}",
                     disabled=len(st.session_state.exposure_steps) <= 1,
                     on_click=remove_exposure_step,
-                    args=(step_id,),
+                    args=(sid,),
                     use_container_width=True,
                 )
 
-            st.text_area(
-                "Ситуация",
-                key=f"exposure_situation_{step_id}",
-                placeholder="Опишите конкретную ситуацию.",
-            )
-
-            st.slider(
+            situation = st.text_area("Ситуация", key=f"exp_situation_{sid}")
+            distress = st.slider(
                 "Ожидаемая тревога (0–10)",
-                min_value=0,
-                max_value=10,
-                key=f"exposure_distress_{step_id}",
+                0, 10, 3,
+                key=f"exp_distress_{sid}",
             )
-
-            st.text_area(
-                "Прогноз или опасение",
-                key=f"exposure_prediction_{step_id}",
-                placeholder="Чего вы ожидаете или опасаетесь?",
-            )
-
-            st.text_area(
-                "Обсуждаемый посильный шаг",
-                key=f"exposure_plan_{step_id}",
-                placeholder="Какой конкретный шаг вы планируете вместе со специалистом?",
-            )
-
-            st.selectbox(
+            prediction = st.text_area("Прогноз или опасение", key=f"exp_prediction_{sid}")
+            plan = st.text_area("Обсуждаемый посильный шаг", key=f"exp_plan_{sid}")
+            status = st.selectbox(
                 "Статус",
                 ["Не обсуждали", "Обсудили", "Запланировали", "Попробовали"],
-                key=f"exposure_status_{step_id}",
+                key=f"exp_status_{sid}",
             )
-
-            st.text_area(
+            reflection = st.text_area(
                 "Наблюдения после практики — необязательно",
-                key=f"exposure_reflection_{step_id}",
-                placeholder="Что произошло и что вы заметили? Можно заполнить позже.",
+                key=f"exp_reflection_{sid}",
             )
 
-        items.append({
-            "id": step_id,
-            "situation": st.session_state.get(f"exposure_situation_{step_id}", ""),
-            "distress": st.session_state.get(f"exposure_distress_{step_id}", 3),
-            "prediction": st.session_state.get(f"exposure_prediction_{step_id}", ""),
-            "plan": st.session_state.get(f"exposure_plan_{step_id}", ""),
-            "status": st.session_state.get(f"exposure_status_{step_id}", "Не обсуждали"),
+        records.append({
+            "situation": situation,
+            "distress": distress,
+            "prediction": prediction,
+            "plan": plan,
+            "status": status,
+            "reflection": reflection,
             "index": index,
         })
 
     st.button("＋ Добавить ступень", on_click=add_exposure_step)
 
-    st.subheader("Лестница по оценке тревоги")
-    ordered = sorted(items, key=lambda item: (item["distress"], item["index"]))
+    ordered = sorted(records, key=lambda x: (x["distress"], x["index"]))
+    sections = [("Цель", st.session_state.get("exposure_goal", ""))]
 
-    if not any(item["situation"].strip() for item in ordered):
-        st.caption("Заполните ситуации, чтобы увидеть их в сводке.")
-    else:
-        for position, item in enumerate(ordered, start=1):
-            if not item["situation"].strip():
-                continue
+    st.subheader("Лестница по ожидаемой тревоге")
+    for position, item in enumerate(ordered, start=1):
+        if not item["situation"].strip():
+            continue
 
-            with st.container(border=True):
-                st.markdown(
-                    f"**{position}. {item['situation']}** "
-                    f"— ожидаемая тревога: **{item['distress']}/10**"
-                )
-                st.caption(f"Статус: {item['status']}")
+        with st.container(border=True):
+            st.markdown(
+                f"**{position}. {item['situation']}** — "
+                f"ожидаемая тревога: **{item['distress']}/10**"
+            )
+            st.caption(f"Статус: {item['status']}")
+            if item["prediction"]:
+                st.write(f"**Прогноз:** {item['prediction']}")
+            if item["plan"]:
+                st.write(f"**Шаг:** {item['plan']}")
+            if item["reflection"]:
+                st.write(f"**Наблюдения:** {item['reflection']}")
 
-                if item["prediction"].strip():
-                    st.write(f"**Прогноз:** {item['prediction']}")
-                if item["plan"].strip():
-                    st.write(f"**Обсуждаемый шаг:** {item['plan']}")
+        sections.append((
+            f"Ступень {position} · тревога {item['distress']}/10 · {item['status']}",
+            "\n".join([
+                f"Ситуация: {item['situation']}",
+                f"Прогноз: {item['prediction']}",
+                f"Планируемый шаг: {item['plan']}",
+                f"Наблюдения: {item['reflection']}",
+            ]),
+        ))
+
+    if len(sections) > 1:
+        png = make_vertical_map_png(
+            "Иерархия экспозиции",
+            sections,
+            "Порядок ступеней — материал для обсуждения, а не автоматическое назначение.",
+        )
+        download_png("⬇️ Скачать лестницу PNG", png, "ierarhiya-ekspozicii.png", "download_exposure")
 
 
 # -------------------------------------------------------------------
@@ -1152,179 +1089,154 @@ def render_exposure():
 
 def render_act_matrix():
     st.title("🧭 ACT-матрица")
-    st.write("Визуальная карта внутреннего опыта и поведения: что уводит от дискомфорта и какие действия приближают к важному.")
-
+    st.write("Исследуйте, что уводит от дискомфорта и какие действия приближают к важному.")
     st.info(
-        "Квадранты — материал для совместного исследования, а не оценка "
-        "правильности поведения. Ценности и выбранные шаги определяет сам клиент."
+        "Матрица — материал для совместного исследования. Она не оценивает "
+        "поведение как правильное или неправильное."
     )
 
-    st.text_area(
-        "Ситуация, которую хотите исследовать",
-        key="act_situation",
-        placeholder="Кратко опишите контекст или трудность.",
-    )
-
-    st.text_area(
+    situation = st.text_area("Ситуация, которую хотите исследовать", key="act_situation")
+    values = st.text_area(
         "Кто или что важно для вас? Какие качества жизни вы хотите воплощать?",
         key="act_values",
         placeholder="Например: близость, забота, любознательность, независимость.",
     )
 
-    st.caption(
-        "Внутренний опыт — мысли, чувства, телесные ощущения и воспоминания. "
-        "Поведение — наблюдаемые действия."
-    )
-
     left, right = st.columns(2)
-
     with left:
         with st.container(border=True):
             st.markdown("### Действия «от дискомфорта»")
-            st.caption("Что вы делаете, чтобы избежать или уменьшить неприятный опыт?")
-            st.text_area(
-                "Поведение / действия",
+            away_actions = st.text_area(
+                "Что вы делаете, чтобы избежать дискомфорта?",
                 key="act_away_actions",
-                placeholder="Например: отменяю встречу, откладываю разговор, отвлекаюсь.",
-                label_visibility="collapsed",
+                placeholder="Например: откладываю разговор, отменяю встречу.",
             )
-
         with st.container(border=True):
             st.markdown("### Внутренний опыт")
-            st.caption("Какие мысли, чувства или ощущения связаны с этой ситуацией?")
-            st.text_area(
-                "Мысли, эмоции, ощущения",
+            inner_experience = st.text_area(
+                "Мысли, эмоции, телесные ощущения",
                 key="act_inner_experience",
-                placeholder="Например: тревога, мысль «я не справлюсь», напряжение в теле.",
-                label_visibility="collapsed",
+                placeholder="Что возникает внутри в этой ситуации?",
             )
 
     with right:
         with st.container(border=True):
-            st.markdown("### Шаги «к важному»")
-            st.caption("Какое небольшое наблюдаемое действие приблизило бы вас к ценности?")
-            st.text_area(
-                "Действия в направлении ценностей",
+            st.markdown("### Действия «к важному»")
+            toward_actions = st.text_area(
+                "Какое действие приближает к важному?",
                 key="act_toward_actions",
-                placeholder="Например: написать близкому человеку, задать вопрос, сделать первый шаг.",
-                label_visibility="collapsed",
+                placeholder="Какой наблюдаемый шаг можно сделать?",
             )
-
         with st.container(border=True):
             st.markdown("### Внутренний опыт при движении к важному")
-            st.caption("Что может возникать внутри, когда вы делаете этот шаг?")
-            st.text_area(
-                "Мысли, эмоции, ощущения",
+            toward_inner = st.text_area(
+                "Что может возникать внутри при этом шаге?",
                 key="act_toward_inner",
-                placeholder="Например: волнение, сомнение, надежда, ощущение интереса.",
-                label_visibility="collapsed",
+                placeholder="Например: волнение, сомнение, надежда.",
             )
 
-    st.subheader("Небольшой выбранный шаг")
-    st.text_area(
-        "Что вы сами хотели бы попробовать сделать в направлении важного?",
+    next_step = st.text_area(
+        "Небольшой выбранный шаг",
         key="act_next_step",
-        placeholder="Шаг должен быть выбран клиентом и согласован в рамках консультации.",
+        placeholder="Какой шаг вы сами хотели бы попробовать?",
     )
 
     if st.checkbox("Показать сводную матрицу", value=True, key="act_show_summary"):
-        st.markdown("### Сводка")
-
-        values = [
-            ("Ситуация", st.session_state.get("act_situation", "")),
-            ("Что важно", st.session_state.get("act_values", "")),
-            ("Действия «от дискомфорта»", st.session_state.get("act_away_actions", "")),
-            ("Внутренний опыт", st.session_state.get("act_inner_experience", "")),
-            ("Действия «к важному»", st.session_state.get("act_toward_actions", "")),
-            ("Внутренний опыт при движении к важному", st.session_state.get("act_toward_inner", "")),
-            ("Выбранный небольшой шаг", st.session_state.get("act_next_step", "")),
-        ]
-
-        for label, value in values:
-            if value.strip():
-                with st.container(border=True):
-                    st.markdown(f"**{label}**")
-                    st.write(value)
+        png = make_act_png(
+            situation, values, away_actions, inner_experience,
+            toward_actions, toward_inner, next_step,
+        )
+        st.image(png, use_container_width=True)
+        download_png("⬇️ Скачать ACT-матрицу PNG", png, "act-matrix.png", "download_act")
 
 
 # -------------------------------------------------------------------
-# Home / About / Library
+# Главная, библиотека, о нас
 # -------------------------------------------------------------------
 
 def render_home():
-    st.markdown(
-        """
-        <div class="hero">
-            <svg class="neuron-pattern" viewBox="0 0 1200 480"
-                 preserveAspectRatio="xMidYMid slice"
-                 xmlns="http://www.w3.org/2000/svg">
-                <g fill="none" stroke="#5794BB" stroke-width="2">
-                    <path d="M40 95 L170 155 L285 80 L420 145 L545 65"/>
-                    <path d="M170 155 L250 285 L390 250 L420 145"/>
-                    <path d="M285 80 L315 25"/>
-                    <path d="M390 250 L520 330 L650 260 L770 325"/>
-                    <path d="M545 65 L680 120 L810 65 L930 145"/>
-                    <path d="M680 120 L650 260"/>
-                    <path d="M810 65 L865 25"/>
-                    <path d="M930 145 L1080 90 L1170 170"/>
-                    <path d="M930 145 L980 285 L1130 330"/>
-                    <path d="M770 325 L850 415 L980 285"/>
-                    <path d="M40 95 L25 210"/>
-                    <path d="M520 330 L485 430"/>
-                </g>
-                <g fill="#4D8FB8" stroke="#F5FAFE" stroke-width="5">
-                    <circle cx="40" cy="95" r="10"/>
-                    <circle cx="170" cy="155" r="13"/>
-                    <circle cx="285" cy="80" r="10"/>
-                    <circle cx="420" cy="145" r="12"/>
-                    <circle cx="545" cy="65" r="9"/>
-                    <circle cx="250" cy="285" r="10"/>
-                    <circle cx="390" cy="250" r="13"/>
-                    <circle cx="520" cy="330" r="10"/>
-                    <circle cx="650" cy="260" r="12"/>
-                    <circle cx="680" cy="120" r="9"/>
-                    <circle cx="810" cy="65" r="12"/>
-                    <circle cx="930" cy="145" r="13"/>
-                    <circle cx="1080" cy="90" r="10"/>
-                    <circle cx="980" cy="285" r="11"/>
-                    <circle cx="1130" cy="330" r="9"/>
-                    <circle cx="850" cy="415" r="10"/>
-                    <circle cx="1170" cy="170" r="8"/>
-                </g>
-            </svg>
-
-            <div class="hero-content">
-                <div class="hero-title">ПСИ-БЛОК</div>
-                <div class="hero-subtitle">
-                    Пространство с наглядными инструментами для совместной
-                    работы психолога и клиента. Мы создаём его, чтобы
-                    структурировать обсуждение и делать психологические техники
-                    удобно заметными и применимыми в реальной практике.
-                </div>
-            </div>
+    hero_html = """
+    <div style="
+        min-height:350px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:42px 25px;
+        box-sizing:border-box;
+        border:1px solid #C9E0EF;
+        border-radius:30px;
+        background:linear-gradient(135deg, rgba(229,243,252,.96), rgba(244,250,254,.96), rgba(220,239,250,.96));
+        box-shadow:0 18px 42px rgba(48,105,145,.12);
+        text-align:center;
+        overflow:hidden;
+        position:relative;
+        font-family:'Nunito Sans',Arial,sans-serif;
+    ">
+      <svg viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice"
+           xmlns="http://www.w3.org/2000/svg"
+           style="position:absolute;inset:0;width:100%;height:100%;opacity:.48;pointer-events:none">
+        <g fill="none" stroke="#5794BB" stroke-width="2">
+          <path d="M40 95 L170 155 L285 80 L420 145 L545 65"/>
+          <path d="M170 155 L250 285 L390 250 L420 145"/>
+          <path d="M390 250 L520 330 L650 260 L770 325"/>
+          <path d="M545 65 L680 120 L810 65 L930 145"/>
+          <path d="M680 120 L650 260"/>
+          <path d="M930 145 L1080 90 L1170 170"/>
+          <path d="M930 145 L980 285 L1130 330"/>
+          <path d="M770 325 L850 415 L980 285"/>
+        </g>
+        <g fill="#4D8FB8" stroke="#F5FAFE" stroke-width="5">
+          <circle cx="40" cy="95" r="10"/><circle cx="170" cy="155" r="13"/>
+          <circle cx="285" cy="80" r="10"/><circle cx="420" cy="145" r="12"/>
+          <circle cx="545" cy="65" r="9"/><circle cx="250" cy="285" r="10"/>
+          <circle cx="390" cy="250" r="13"/><circle cx="520" cy="330" r="10"/>
+          <circle cx="650" cy="260" r="12"/><circle cx="680" cy="120" r="9"/>
+          <circle cx="810" cy="65" r="12"/><circle cx="930" cy="145" r="13"/>
+          <circle cx="1080" cy="90" r="10"/><circle cx="980" cy="285" r="11"/>
+          <circle cx="1130" cy="330" r="9"/><circle cx="850" cy="415" r="10"/>
+        </g>
+      </svg>
+      <div style="position:relative;z-index:1;max-width:820px">
+        <div style="
+            color:#214D6C;font-size:clamp(3.8rem,9vw,6.7rem);
+            font-weight:800;line-height:1;letter-spacing:.035em;
+            text-shadow:0 3px 14px rgba(255,255,255,.75)">
+            ПСИ-БЛОК
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <div style="
+            max-width:760px;margin:20px auto 0 auto;color:#476B85;
+            font-size:1.2rem;line-height:1.7">
+            Пространство с наглядными инструментами для совместной работы
+            психолога и клиента. Мы создаём его, чтобы структурировать
+            обсуждение и помогать возвращаться к важным идеям в ходе работы.
+        </div>
+      </div>
+    </div>
+    """
+    components.html(hero_html, height=380, scrolling=False)
 
     left, right = st.columns(2)
-
     with left:
-        if st.button("📚  Библиотека техник", type="primary", use_container_width=True):
-            go_library()
-
+        st.button(
+            "📚  Библиотека техник",
+            type="primary",
+            use_container_width=True,
+            on_click=go_library,
+        )
     with right:
-        if st.button("ℹ️  О нас", type="primary", use_container_width=True):
-            go_about()
+        st.button(
+            "ℹ️  О нас",
+            type="primary",
+            use_container_width=True,
+            on_click=go_about,
+        )
 
     st.divider()
-    st.markdown(
-        """
-        #### Инструменты для совместной работы
-        Выберите технику, чтобы открыть её интерактивный черновик. Материалы
-        предназначены для поддержки обсуждения и не заменяют профессиональную
-        оценку или терапевтическую работу.
-        """
+    st.markdown("### Инструменты для совместной работы")
+    st.write(
+        "Выберите технику, чтобы открыть интерактивный черновик. "
+        "Материалы поддерживают обсуждение, но не заменяют профессиональную "
+        "оценку или терапевтическую работу."
     )
 
 
@@ -1332,12 +1244,10 @@ def render_library():
     st.title("📚 Библиотека техник")
     st.write("Выберите инструмент, который хотите открыть.")
 
-    cards = list(techniques.items())
-
-    for start in range(0, len(cards), 2):
+    items = list(TECHNIQUES.items())
+    for start in range(0, len(items), 2):
         columns = st.columns(2)
-
-        for column, (technique_id, technique) in zip(columns, cards[start:start + 2]):
+        for column, (technique_id, technique) in zip(columns, items[start:start + 2]):
             with column:
                 with st.container(border=True):
                     st.markdown(f"### {technique['icon']} {technique['title']}")
@@ -1354,16 +1264,12 @@ def render_library():
 
 def render_about():
     st.title("ℹ️ О нас")
-
     st.markdown(
         """
         **ПСИ-БЛОК** — проект библиотеки интерактивных инструментов
-        для психологических консультаций.
-
-        Мы хотим помочь психологу и клиенту совместно структурировать
-        обсуждение, визуализировать связи и возвращаться к важным идеям
-        в ходе работы. Инструменты не заменяют специалиста и не принимают
-        решения за клиента.
+        для психологических консультаций. Его цель — помочь специалисту
+        и клиенту совместно структурировать обсуждение и наглядно фиксировать
+        идеи. Инструменты не заменяют психолога и не принимают решения за клиента.
         """
     )
 
@@ -1371,62 +1277,56 @@ def render_about():
     st.subheader("Команда разработчиков")
 
     developers = [
-        {
-            "name": "Имя Фамилия",
-            "role": "Роль в проекте",
-            "photo": "assets/developer1.jpg",
-        },
-        {
-            "name": "Имя Фамилия",
-            "role": "Роль в проекте",
-            "photo": "assets/developer2.jpg",
-        },
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer1.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer2.jpg"},
+        {"name": "Имя Фамилия", "role": "Роль в проекте", "photo": "assets/developer3.jpg"},
     ]
 
-    columns = st.columns(len(developers))
-
+    columns = st.columns(3)
     for column, person in zip(columns, developers):
         with column:
             with st.container(border=True):
-                photo_path = Path(person["photo"])
-
-                if photo_path.exists():
-                    st.image(str(photo_path), use_container_width=True)
+                path = Path(person["photo"])
+                if path.exists():
+                    st.image(str(path), use_container_width=True)
                 else:
-                    st.info(f"Фотография не найдена: `{person['photo']}`")
+                    st.markdown(
+                        "<div style='height:220px;display:flex;align-items:center;"
+                        "justify-content:center;border-radius:14px;"
+                        "background:linear-gradient(135deg,#E3F2FB,#F4FAFE);"
+                        "font-size:4rem'>👤</div>",
+                        unsafe_allow_html=True,
+                    )
 
                 st.markdown(
-                    f"<div class='developer-name'>{html.escape(person['name'])}</div>"
-                    f"<div class='developer-role'>{html.escape(person['role'])}</div>",
+                    f"<div class='developer-name'>{safe_text(person['name'])}</div>"
+                    f"<div class='developer-role'>{safe_text(person['role'])}</div>",
                     unsafe_allow_html=True,
                 )
 
     st.divider()
     st.warning(
-        "Это прототип. Не вводите в него идентифицирующие или особенно "
-        "чувствительные сведения: защищённое хранение клиентских данных "
-        "пока не реализовано."
+        "Это прототип. Не вводите идентифицирующие или особо чувствительные "
+        "сведения: защищённое хранение клиентских данных пока не реализовано."
     )
 
 
-def render_selected_technique():
+def render_technique():
     technique_id = st.session_state.selected_technique
-    technique = techniques.get(technique_id)
+    technique = TECHNIQUES.get(technique_id)
 
     if not technique:
         st.warning("Техника не найдена.")
         st.button("Вернуться в библиотеку", on_click=go_library)
         return
 
-    if st.button("← К библиотеке", on_click=go_library):
-        return
-
+    st.button("← К библиотеке", on_click=go_library)
     st.divider()
 
     if technique_id == "decision_tree":
         render_decision_tree()
     elif technique_id == "dbt_chain":
-        render_chain_analysis()
+        render_chain()
     elif technique_id == "exposure":
         render_exposure()
     elif technique_id == "act_matrix":
@@ -1434,7 +1334,7 @@ def render_selected_technique():
 
 
 # -------------------------------------------------------------------
-# Основной роутинг
+# Роутинг
 # -------------------------------------------------------------------
 
 render_navigation()
@@ -1447,7 +1347,7 @@ elif st.session_state.page == "library":
 elif st.session_state.page == "about":
     render_about()
 elif st.session_state.page == "technique":
-    render_selected_technique()
+    render_technique()
 else:
     st.session_state.page = "home"
     render_home()
