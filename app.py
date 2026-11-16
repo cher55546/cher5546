@@ -16,7 +16,7 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------------------
-# Фон сайта: полупрозрачные нейронные связи
+# Фон сайта: нейронная сеть
 # ---------------------------------------------------------------------
 
 NEURON_SVG = """
@@ -62,7 +62,7 @@ NEURON_BACKGROUND = base64.b64encode(
 
 
 # ---------------------------------------------------------------------
-# Сине-голубая тема
+# Сине-голубой дизайн
 # ---------------------------------------------------------------------
 
 st.markdown(
@@ -142,40 +142,38 @@ st.markdown(
         box-shadow: 0 10px 26px rgba(62,112,148,.08);
     }}
 
-    input, textarea, select,
-    [data-baseweb="input"],
-    [data-baseweb="textarea"],
-    [data-baseweb="select"] > div,
-    [data-baseweb="popover"],
-    [data-baseweb="menu"] {{
+    /* Светлые поля ввода независимо от системной темы */
+    [data-testid="stTextInput"] [data-baseweb="input"],
+    [data-testid="stTextArea"] [data-baseweb="textarea"],
+    [data-testid="stSelectbox"] [data-baseweb="input"],
+    [data-testid="stDateInput"] [data-baseweb="input"] {{
+        background: #FFFFFF !important;
+        border: 1px solid #AFCFE2 !important;
+        border-radius: 13px !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }}
+
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-testid="stSelectbox"] input {{
         color: #294A65 !important;
-        background-color: #FFFFFF !important;
-        border-color: #AFCFE2 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }}
+
+    [data-testid="stTextInput"] [data-baseweb="input"]:focus-within,
+    [data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within,
+    [data-testid="stSelectbox"] [data-baseweb="input"]:focus-within {{
+        border: 1px solid #6EA7CB !important;
+        box-shadow: 0 0 0 3px rgba(110, 167, 203, 0.18) !important;
     }}
 
     input::placeholder, textarea::placeholder {{
         color: #7893A8 !important;
         opacity: 1 !important;
-    }}
-
-    [data-baseweb="select"] span,
-    [data-baseweb="menu"] li {{
-        color: #294A65 !important;
-    }}
-
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextArea"] textarea {{
-        border: 1px solid #AFCFE2 !important;
-        border-radius: 13px !important;
-        background: #FFFFFF !important;
-        color: #294A65 !important;
-        caret-color: #315773 !important;
-    }}
-
-    [data-testid="stTextInput"] input:focus,
-    [data-testid="stTextArea"] textarea:focus {{
-        border-color: #5B9BC4 !important;
-        box-shadow: 0 0 0 2px rgba(91,155,196,.18) !important;
     }}
 
     [data-testid="stCheckbox"] label,
@@ -261,7 +259,7 @@ st.markdown(
 
 
 # ---------------------------------------------------------------------
-# Каталог и навигация
+# Навигация и каталог
 # ---------------------------------------------------------------------
 
 TECHNIQUES = {
@@ -322,7 +320,7 @@ def render_navigation():
 
 
 # ---------------------------------------------------------------------
-# SVG-схемы с масштабированием и PNG-скачиванием
+# SVG-схемы с масштабированием и PNG
 # ---------------------------------------------------------------------
 
 def svg_escape(value):
