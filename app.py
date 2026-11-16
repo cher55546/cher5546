@@ -16,7 +16,7 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------------------
-# Фон: полупрозрачный узор нейронных связей
+# Фон сайта: полупрозрачные нейронные связи
 # ---------------------------------------------------------------------
 
 NEURON_SVG = """
@@ -62,8 +62,7 @@ NEURON_BACKGROUND = base64.b64encode(
 
 
 # ---------------------------------------------------------------------
-# Сине-голубой дизайн. Переопределения сохраняют светлые поля
-# и при системной тёмной теме.
+# Сине-голубая тема
 # ---------------------------------------------------------------------
 
 st.markdown(
@@ -143,7 +142,6 @@ st.markdown(
         box-shadow: 0 10px 26px rgba(62,112,148,.08);
     }}
 
-    /* Поля и выпадающие списки остаются светлыми при тёмной теме устройства. */
     input, textarea, select,
     [data-baseweb="input"],
     [data-baseweb="textarea"],
@@ -324,7 +322,7 @@ def render_navigation():
 
 
 # ---------------------------------------------------------------------
-# Общие функции построения SVG-схем
+# Генерация интерактивной схемы SVG с масштабированием и PNG
 # ---------------------------------------------------------------------
 
 def svg_escape(value):
@@ -399,8 +397,7 @@ def svg_document(title, content, width, height):
     </svg>"""
 
 
-def render_interactive_diagram(svg, component_key, height=720):
-    """Интерактивный просмотр SVG и скачивание его как PNG."""
+def render_interactive_diagram(svg, component_key, height=760):
     safe_key = "".join(
         char for char in component_key
         if char.isalnum() or char == "_"
@@ -408,13 +405,13 @@ def render_interactive_diagram(svg, component_key, height=720):
     svg_id = f"diagram_{safe_key}"
     diagram_svg = svg.replace("<svg ", f'<svg id="{svg_id}" ', 1)
 
-    component_html = f"""
+    template = r"""
     <!doctype html>
     <html>
     <head>
       <meta charset="utf-8">
       <style>
-        html, body {{
+        html, body {
           margin: 0;
           padding: 0;
           width: 100%;
@@ -422,15 +419,15 @@ def render_interactive_diagram(svg, component_key, height=720):
           overflow: hidden;
           background: transparent;
           font-family: Arial, sans-serif;
-        }}
-        .toolbar {{
+        }
+        .toolbar {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
           align-items: center;
           padding: 6px 2px 10px 2px;
-        }}
-        .toolbar button {{
+        }
+        .toolbar button {
           border: 1px solid #9FC5DE;
           border-radius: 10px;
           background: #EAF5FC;
@@ -438,16 +435,16 @@ def render_interactive_diagram(svg, component_key, height=720):
           padding: 8px 13px;
           font-weight: 700;
           cursor: pointer;
-        }}
-        .toolbar button:hover {{
+        }
+        .toolbar button:hover {
           background: #D9EDF9;
-        }}
-        .hint {{
+        }
+        .hint {
           color: #54718A;
           font-size: 13px;
           margin-left: 6px;
-        }}
-        .viewport {{
+        }
+        .viewport {
           width: 100%;
           height: calc(100% - 58px);
           overflow: hidden;
@@ -456,16 +453,16 @@ def render_interactive_diagram(svg, component_key, height=720):
           background: #F5FAFE;
           cursor: grab;
           touch-action: none;
-        }}
-        .viewport.dragging {{
+        }
+        .viewport.dragging {
           cursor: grabbing;
-        }}
-        #{svg_id} {{
+        }
+        #DIAGRAM_ID {
           display: block;
           width: 100%;
           height: 100%;
           user-select: none;
-        }}
+        }
       </style>
     </head>
     <body>
@@ -478,32 +475,31 @@ def render_interactive_diagram(svg, component_key, height=720):
       </div>
 
       <div class="viewport" id="viewport">
-        {diagram_svg}
+        DIAGRAM_SVG
       </div>
 
       <script>
-        (() => {{
-          const svg = document.getElementById("{svg_id}");
+        (() => {
+          const svg = document.getElementById("DIAGRAM_ID");
           const viewport = document.getElementById("viewport");
-
           const initial = svg.viewBox.baseVal;
-          const base = {{
+
+          const base = {
             x: initial.x,
             y: initial.y,
             width: initial.width,
             height: initial.height
-          }};
+          };
+          const view = { ...base };
 
-          const view = {{ ...base }};
-
-          function applyViewBox() {{
+          function applyViewBox() {
             svg.setAttribute(
               "viewBox",
-              `${{view.x}} ${{view.y}} ${{view.width}} ${{view.height}}`
+              `${view.x} ${view.y} ${view.width} ${view.height}`
             );
-          }}
+          }
 
-          function zoom(factor, clientX, clientY) {{
+          function zoom(factor, clientX, clientY) {
             const rect = svg.getBoundingClientRect();
             const px = clientX === undefined ? rect.left + rect.width / 2 : clientX;
             const py = clientY === undefined ? rect.top + rect.height / 2 : clientY;
@@ -517,7 +513,7 @@ def render_interactive_diagram(svg, component_key, height=720):
             view.x += (oldWidth - view.width) * rx;
             view.y += (oldHeight - view.height) * ry;
             applyViewBox();
-          }}
+          }
 
           document.getElementById("zoomIn").addEventListener(
             "click", () => zoom(0.8)
@@ -525,32 +521,32 @@ def render_interactive_diagram(svg, component_key, height=720):
           document.getElementById("zoomOut").addEventListener(
             "click", () => zoom(1.25)
           );
-          document.getElementById("reset").addEventListener("click", () => {{
+          document.getElementById("reset").addEventListener("click", () => {
             view.x = base.x;
             view.y = base.y;
             view.width = base.width;
             view.height = base.height;
             applyViewBox();
-          }});
+          });
 
-          viewport.addEventListener("wheel", event => {{
+          viewport.addEventListener("wheel", event => {
             event.preventDefault();
             zoom(event.deltaY < 0 ? 0.9 : 1.1, event.clientX, event.clientY);
-          }}, {{ passive: false }});
+          }, { passive: false });
 
           let dragging = false;
           let lastX = 0;
           let lastY = 0;
 
-          viewport.addEventListener("pointerdown", event => {{
+          viewport.addEventListener("pointerdown", event => {
             dragging = true;
             lastX = event.clientX;
             lastY = event.clientY;
             viewport.classList.add("dragging");
             viewport.setPointerCapture(event.pointerId);
-          }});
+          });
 
-          viewport.addEventListener("pointermove", event => {{
+          viewport.addEventListener("pointermove", event => {
             if (!dragging) return;
 
             const rect = svg.getBoundingClientRect();
@@ -562,17 +558,17 @@ def render_interactive_diagram(svg, component_key, height=720):
             lastX = event.clientX;
             lastY = event.clientY;
             applyViewBox();
-          }});
+          });
 
-          function stopDragging() {{
+          function stopDragging() {
             dragging = false;
             viewport.classList.remove("dragging");
-          }}
+          }
 
           viewport.addEventListener("pointerup", stopDragging);
           viewport.addEventListener("pointercancel", stopDragging);
 
-          document.getElementById("downloadPng").addEventListener("click", () => {{
+          document.getElementById("downloadPng").addEventListener("click", () => {
             const clone = svg.cloneNode(true);
             clone.removeAttribute("id");
             clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -580,18 +576,18 @@ def render_interactive_diagram(svg, component_key, height=720):
             clone.setAttribute("height", base.height);
             clone.setAttribute(
               "viewBox",
-              `${{base.x}} ${{base.y}} ${{base.width}} ${{base.height}}`
+              `${base.x} ${base.y} ${base.width} ${base.height}`
             );
 
             const source = new XMLSerializer().serializeToString(clone);
             const blob = new Blob(
               [source],
-              {{ type: "image/svg+xml;charset=utf-8" }}
+              { type: "image/svg+xml;charset=utf-8" }
             );
             const url = URL.createObjectURL(blob);
             const image = new Image();
 
-            image.onload = () => {{
+            image.onload = () => {
               const canvas = document.createElement("canvas");
               canvas.width = Math.round(base.width * 2);
               canvas.height = Math.round(base.height * 2);
@@ -602,41 +598,48 @@ def render_interactive_diagram(svg, component_key, height=720):
               context.drawImage(image, 0, 0, canvas.width, canvas.height);
               URL.revokeObjectURL(url);
 
-              canvas.toBlob(pngBlob => {{
-                if (!pngBlob) {{
+              canvas.toBlob(pngBlob => {
+                if (!pngBlob) {
                   alert("Не удалось создать PNG. Попробуйте ещё раз.");
                   return;
-                }}
+                }
 
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(pngBlob);
-                link.download = "{safe_key}.png";
+                link.download = "FILENAME.png";
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
 
                 setTimeout(() => URL.revokeObjectURL(link.href), 1500);
-              }}, "image/png");
-            }};
+              }, "image/png");
+            };
 
-            image.onerror = () => {{
+            image.onerror = () => {
               URL.revokeObjectURL(url);
               alert("Не удалось подготовить изображение для скачивания.");
-            }};
+            };
 
             image.src = url;
-          }});
-        }})();
+          });
+        })();
       </script>
     </body>
     </html>
     """
 
+    component_html = (
+        template
+        .replace("DIAGRAM_ID", svg_id)
+        .replace("DIAGRAM_SVG", diagram_svg)
+        .replace("FILENAME", safe_key)
+    )
+
     components.html(component_html, height=height, scrolling=False)
 
 
 # ---------------------------------------------------------------------
-# Изображения техник
+# Конструкторы схем
 # ---------------------------------------------------------------------
 
 def make_decision_svg(question, options):
@@ -683,21 +686,16 @@ def make_decision_svg(question, options):
                 f'r="12" fill="{color}"/>'
             )
 
-            scenario_body = (
+            scenario_text = (
                 f"{scenario['name']}\n"
                 f"{option['normalized'][scenario_index]:.1f}% · "
                 f"оценка {scenario['score']:g}"
             )
             content.append(
                 svg_card(
-                    scenario_x - 135,
-                    scenario_y - 5,
-                    270,
-                    105,
+                    scenario_x - 135, scenario_y - 5, 270, 105,
                     f"Исход {scenario_index + 1}",
-                    scenario_body,
-                    "#FFFFFF",
-                    color,
+                    scenario_text, "#FFFFFF", color,
                 )
             )
 
@@ -707,27 +705,17 @@ def make_decision_svg(question, options):
         )
         content.append(
             svg_card(
-                option_x - 160,
-                option_y + 25,
-                320,
-                100,
+                option_x - 160, option_y + 25, 320, 100,
                 option["name"],
                 f"Итоговая оценка: {option['score']:.2f}",
-                "#FFFFFF",
-                color,
+                "#FFFFFF", color,
             )
         )
 
     content.append(
         svg_card(
-            root_x - 230,
-            root_y - 55,
-            460,
-            110,
-            "Решение",
-            question,
-            "#E4F2FA",
-            "#78A9C9",
+            root_x - 230, root_y - 55, 460, 110,
+            "Решение", question, "#E4F2FA", "#78A9C9",
         )
     )
 
@@ -872,10 +860,8 @@ def new_option():
 def initialize_decision_tree():
     if "dt_options" not in st.session_state:
         st.session_state.dt_options = [new_option(), new_option()]
-
     if "dt_result" not in st.session_state:
         st.session_state.dt_result = None
-
     if "dt_question" not in st.session_state:
         st.session_state.dt_question = ""
 
@@ -994,12 +980,10 @@ def render_decision_tree():
 
                 if name_state_key not in st.session_state:
                     st.session_state[name_state_key] = ""
-
                 if probability_state_key not in st.session_state:
                     st.session_state[probability_state_key] = (
                         scenario["default_probability"]
                     )
-
                 if score_state_key not in st.session_state:
                     st.session_state[score_state_key] = 0.0
 
@@ -1188,11 +1172,14 @@ def render_decision_tree():
 
         for column, option in zip(columns, result["options"]):
             with column:
-                prefix = "Лидер по оценке: " if (
-                    option["name"] == result["best_name"]
-                ) else ""
+                label = (
+                    "Лидер по оценке: "
+                    if option["name"] == result["best_name"]
+                    else ""
+                ) + option["name"]
+
                 st.metric(
-                    label=prefix + option["name"],
+                    label=label,
                     value=f"{option['score']:.2f} / 5",
                 )
 
@@ -1509,8 +1496,8 @@ def render_exposure():
     sections = [("Цель", goal)]
 
     st.subheader("Лестница по ожидаемой тревоге")
-
     display_position = 0
+
     for item in ordered:
         if not item["situation"].strip():
             continue
@@ -1639,7 +1626,7 @@ def render_act_matrix():
 
 
 # ---------------------------------------------------------------------
-# Главная, библиотека и раздел «О нас»
+# Главная, библиотека, раздел «О нас»
 # ---------------------------------------------------------------------
 
 def render_home():
@@ -1819,12 +1806,6 @@ def render_about():
                     unsafe_allow_html=True,
                 )
 
-    st.divider()
-    st.info(
-        "Это прототип. Не вводите идентифицирующие или особо чувствительные "
-        "сведения: защищённое хранение клиентских данных не реализовано."
-    )
-
 
 def render_selected_technique():
     technique_id = st.session_state.selected_technique
@@ -1848,7 +1829,7 @@ def render_selected_technique():
 
 
 # ---------------------------------------------------------------------
-# Запуск приложения
+# Запуск
 # ---------------------------------------------------------------------
 
 render_navigation()
