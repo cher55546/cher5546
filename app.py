@@ -57,7 +57,7 @@ NEURON_SVG = """
 
 
 # ---------------------------------------------------------------------
-# Стиль: светлые поля даже при тёмной системной теме
+# Light theme for all inputs and cards
 # ---------------------------------------------------------------------
 
 st.markdown(
@@ -67,10 +67,6 @@ st.markdown(
 
     :root {{
         color-scheme: light !important;
-        --background-color: #F3F9FD;
-        --secondary-background-color: #EAF4FB;
-        --text-color: #294A65;
-        --primary-color: #5B9BC4;
     }}
 
     html, body, [data-testid="stAppViewContainer"] {{
@@ -92,7 +88,7 @@ st.markdown(
         z-index: 0;
         pointer-events: none;
         opacity: .56;
-        background-image: url("data:image/svg+xml,{quote(NEURON_SVG, safe="")}");
+        background-image: url("data:image/svg+xml,{quote(NEURON_SVG, safe='')}");
         background-repeat: repeat;
         background-size: 1000px 800px;
         background-position: left top;
@@ -138,7 +134,6 @@ st.markdown(
         box-shadow: 0 10px 26px rgba(62,112,148,.08);
     }}
 
-    /* Принудительно светлый фон полей и их внутренних элементов */
     [data-testid="stTextInput"] [data-baseweb="input"],
     [data-testid="stTextArea"] [data-baseweb="textarea"],
     [data-testid="stNumberInput"] [data-baseweb="input"],
@@ -269,7 +264,7 @@ st.markdown(
 
 
 # ---------------------------------------------------------------------
-# Навигация
+# Навигация и каталог
 # ---------------------------------------------------------------------
 
 TECHNIQUES = {
@@ -330,36 +325,35 @@ def render_navigation():
 
 
 # ---------------------------------------------------------------------
-# Построение SVG-схем с кириллицей
+# SVG helpers
 # ---------------------------------------------------------------------
 
 def svg_escape(value):
     return html.escape(str(value or ""), quote=True)
 
 
-def wrap_svg_text(value, width=30, max_lines=5):
+def svg_wrap(value, width=30, max_lines=5):
     value = str(value or "").strip()
     if not value:
         return ["—"]
 
     lines = []
     for paragraph in value.splitlines():
-        lines.extend(textwrap.wrap(paragraph, width=width) or [""])
+        wrapped = textwrap.wrap(paragraph, width=width) or [""]
+        lines.extend(wrapped)
 
     return lines[:max_lines] or ["—"]
 
 
 def svg_text(value, x, y, width=30, font_size=16,
              fill="#294A65", max_lines=5, line_height=None):
-    lines = wrap_svg_text(value, width, max_lines)
+    lines = svg_wrap(value, width, max_lines)
     line_height = line_height or int(font_size * 1.35)
     spans = []
 
-    for index, line in enumerate(lines):
-        dy = 0 if index == 0 else line_height
-        spans.append(
-            f'<tspan x="{x}" dy="{dy}">{svg_escape(line)}</tspan>'
-        )
+    for i, line in enumerate(lines):
+        dy = 0 if i == 0 else line_height
+        spans.append(f'<tspan x="{x}" dy="{dy}">{svg_escape(line)}</tspan>')
 
     return (
         f'<text x="{x}" y="{y}" text-anchor="middle" '
@@ -374,8 +368,8 @@ def svg_card(x, y, width, height, title, body,
     return f"""
     <rect x="{x}" y="{y}" width="{width}" height="{height}"
           rx="20" fill="{fill}" stroke="{stroke}" stroke-width="3"/>
-    {svg_text(title, x + width / 2, y + 31, max_chars, 17, "#294A65", 2)}
-    {svg_text(body, x + width / 2, y + 61, max_chars, 14, "#476B85", 5)}
+    {svg_text(title, x + width / 2, y + 32, max_chars, 17, "#294A65", 2)}
+    {svg_text(body, x + width / 2, y + 62, max_chars, 14, "#476B85", 5)}
     """
 
 
@@ -479,10 +473,7 @@ def render_interactive_diagram(svg, key, height=740):
           const view = {...base};
 
           function applyView() {
-            svg.setAttribute(
-              "viewBox",
-              `${view.x} ${view.y} ${view.width} ${view.height}`
-            );
+            svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.width} ${view.height}`);
           }
 
           function zoom(factor, clientX, clientY) {
@@ -549,15 +540,10 @@ def render_interactive_diagram(svg, key, height=740):
             clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
             clone.setAttribute("width", base.width);
             clone.setAttribute("height", base.height);
-            clone.setAttribute(
-              "viewBox",
-              `${base.x} ${base.y} ${base.width} ${base.height}`
-            );
+            clone.setAttribute("viewBox", `${base.x} ${base.y} ${base.width} ${base.height}`);
 
             const source = new XMLSerializer().serializeToString(clone);
-            const blob = new Blob([source], {
-              type: "image/svg+xml;charset=utf-8"
-            });
+            const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
             const url = URL.createObjectURL(blob);
             const image = new Image();
 
@@ -565,10 +551,10 @@ def render_interactive_diagram(svg, key, height=740):
               const canvas = document.createElement("canvas");
               canvas.width = Math.round(base.width * 2);
               canvas.height = Math.round(base.height * 2);
-              const context = canvas.getContext("2d");
-              context.fillStyle = "#F5FAFE";
-              context.fillRect(0, 0, canvas.width, canvas.height);
-              context.drawImage(image, 0, 0, canvas.width, canvas.height);
+              const ctx = canvas.getContext("2d");
+              ctx.fillStyle = "#F5FAFE";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
               URL.revokeObjectURL(url);
 
               canvas.toBlob(png => {
@@ -599,20 +585,20 @@ def render_interactive_diagram(svg, key, height=740):
     </html>
     """
 
-    component_html = (
+    html_blob = (
         template
         .replace("DIAGRAM_ID", svg_id)
         .replace("DIAGRAM_SVG", diagram_svg)
         .replace("PNG_FILENAME", safe_key)
     )
-    components.html(component_html, height=height, scrolling=False)
+    components.html(html_blob, height=height, scrolling=False)
 
 
 def make_vertical_diagram(title, sections, note):
     width = 1100
-    card_height = 118
-    gap = 42
-    top = 88
+    card_height = 120
+    gap = 40
+    top = 90
     height = max(540, top + len(sections) * (card_height + gap) + 70)
     content = []
 
@@ -625,12 +611,12 @@ def make_vertical_diagram(title, sections, note):
         if i < len(sections) - 1:
             content.append(
                 f'<line x1="550" y1="{y + card_height}" '
-                f'x2="550" y2="{y + card_height + gap - 5}" '
+                f'x2="550" y2="{y + card_height + gap - 6}" '
                 'stroke="#6EA7CB" stroke-width="4"/>'
             )
             content.append(
                 f'<path d="M540 {y + card_height + gap - 15} '
-                f'L550 {y + card_height + gap - 4} '
+                f'L550 {y + card_height + gap - 6} '
                 f'L560 {y + card_height + gap - 15}" '
                 'fill="none" stroke="#6EA7CB" stroke-width="4"/>'
             )
@@ -644,65 +630,115 @@ def make_vertical_diagram(title, sections, note):
 
 
 def make_decision_diagram(question, options):
-    width = max(1100, len(options) * 430)
+    card_w = 290
+    card_h = 150
+    option_w = 300
+    option_h = 120
+    leaf_spacing = 330
+    left_margin = 170
+    top_y = 105
+    option_y = 410
+    root_y = 680
+    root_w = 440
+    root_h = 110
+    root_x = 0
+
+    # Рассчёт ширины в зависимости от количества исходов
+    total_leaf_count = sum(len(option["scenarios"]) for option in options)
+    total_leaf_count = max(total_leaf_count, 1)
+    width = left_margin * 2 + (total_leaf_count - 1) * leaf_spacing + card_w
+    root_x = width / 2
     height = 850
-    root_x, root_y = width / 2, 730
-    option_y, scenario_y = 470, 160
+
     colors = ["#6AAED0", "#65B99C", "#76A5D2", "#8BB7D8", "#5F9FC4"]
-    option_xs = [
-        width * (i + 1) / (len(options) + 1)
-        for i in range(len(options))
-    ]
     content = []
 
-    for oi, option in enumerate(options):
-        ox = option_xs[oi]
-        color = colors[oi % len(colors)]
+    option_layout = []
+    next_leaf_index = 0
+    for option_index, option in enumerate(options):
+        scenario_centers = [
+            left_margin + card_w / 2 + (next_leaf_index + i) * leaf_spacing
+            for i in range(len(option["scenarios"]))
+        ]
+        next_leaf_index += len(option["scenarios"])
+        option_layout.append({
+            "option": option,
+            "color": colors[option_index % len(colors)],
+            "scenario_centers": scenario_centers,
+            "center_x": sum(scenario_centers) / len(scenario_centers),
+        })
 
+    # Линии от исходов к вариантам
+    for entry in option_layout:
+        for sx in entry["scenario_centers"]:
+            content.append(
+                f'<path d="M {sx} {top_y + card_h} '
+                f'C {sx} 325, {entry["center_x"]} 330, {entry["center_x"]} {option_y}" '
+                f'fill="none" stroke="{entry["color"]}" stroke-width="4"/>'
+            )
+
+    # Линии от вариантов к решению
+    for entry in option_layout:
         content.append(
-            f'<path d="M{root_x} {root_y - 60} C{root_x} {root_y - 170}, '
-            f'{ox} {option_y + 100}, {ox} {option_y + 35}" '
-            f'fill="none" stroke="{color}" stroke-width="6"/>'
+            f'<path d="M {entry["center_x"]} {option_y + option_h} '
+            f'C {entry["center_x"]} 560, {root_x} 570, {root_x} {root_y}" '
+            f'fill="none" stroke="{entry["color"]}" stroke-width="6"/>'
         )
 
-        scenarios = option["scenarios"]
-        spacing = min(300, 700 / max(1, len(scenarios)))
-        start_x = ox - (len(scenarios) - 1) * spacing / 2
-
-        for si, scenario in enumerate(scenarios):
-            sx = start_x + si * spacing
-            content.append(
-                f'<path d="M{ox} {option_y - 20} C{ox} {option_y - 115}, '
-                f'{sx} {scenario_y + 150}, {sx} {scenario_y + 100}" '
-                f'fill="none" stroke="{color}" stroke-width="4"/>'
-            )
+    # Карточки исходов
+    current_leaf_index = 0
+    for entry in option_layout:
+        option = entry["option"]
+        for si, scenario in enumerate(option["scenarios"]):
+            sx = left_margin + card_w / 2 + current_leaf_index * leaf_spacing
+            current_leaf_index += 1
             body = (
                 f"{scenario['name']}\n"
                 f"{option['normalized'][si]:.1f}% · оценка {scenario['score']:g}"
             )
             content.append(
                 svg_card(
-                    sx - 135, scenario_y, 270, 105,
-                    f"Исход {si + 1}", body, "#FFFFFF", color,
+                    sx - card_w / 2,
+                    top_y,
+                    card_w,
+                    card_h,
+                    f"Исход {si + 1}",
+                    body,
+                    "#FFFFFF",
+                    entry["color"],
                 )
             )
 
+    # Карточки вариантов
+    for entry in option_layout:
         content.append(
             svg_card(
-                ox - 160, option_y + 30, 320, 95,
-                option["name"],
-                f"Итоговая оценка: {option['score']:.2f}",
-                "#FFFFFF", color,
+                entry["center_x"] - option_w / 2,
+                option_y,
+                option_w,
+                option_h,
+                entry["option"]["name"],
+                f"Итоговая оценка: {entry['option']['score']:.2f}",
+                "#FFFFFF",
+                entry["color"],
             )
         )
 
+    # Карточка решения
     content.append(
         svg_card(
-            root_x - 225, root_y - 55, 450, 105,
-            "Решение", question, "#E4F2FA", "#78A9C9",
+            root_x - root_w / 2,
+            root_y,
+            root_w,
+            root_h,
+            "Решение",
+            question,
+            "#E4F2FA",
+            "#78A9C9",
         )
     )
-    return svg_document("Дерево решений", "".join(content), width, height)
+
+    return svg_document("Дерево решений", "".join(content), int(width), height)
 
 
 def make_act_diagram(situation, values, away, inner, toward, toward_inner, step):
@@ -722,7 +758,7 @@ def make_act_diagram(situation, values, away, inner, toward, toward_inner, step)
 
 
 # ---------------------------------------------------------------------
-# Дерево решений
+# Дерево решений: интерфейс
 # ---------------------------------------------------------------------
 
 def new_scenario(first=False):
@@ -764,7 +800,7 @@ def add_decision_scenario(option_id):
         if option["id"] == option_id:
             option["scenarios"].append(new_scenario())
             clear_decision_result()
-            break
+            return
 
 
 def delete_decision_scenario(option_id, scenario_id):
@@ -775,7 +811,7 @@ def delete_decision_scenario(option_id, scenario_id):
                 if scenario["id"] != scenario_id
             ]
             clear_decision_result()
-            break
+            return
 
 
 def render_decision_tree():
@@ -800,10 +836,10 @@ def render_decision_tree():
         option_key = decision_option_key(option_id)
 
         with st.container(border=True):
-            heading_col, delete_col = st.columns([5, 1.5])
-            with heading_col:
+            left_col, right_col = st.columns([5, 1.5])
+            with left_col:
                 st.markdown(f"### Вариант {oi}")
-            with delete_col:
+            with right_col:
                 st.button(
                     "Удалить вариант",
                     key=f"delete_option_{option_id}",
@@ -815,7 +851,6 @@ def render_decision_tree():
 
             if option_key not in st.session_state:
                 st.session_state[option_key] = ""
-
             st.text_input(
                 "Название варианта",
                 key=option_key,
@@ -837,10 +872,10 @@ def render_decision_tree():
                     st.session_state[score_key] = 0.0
 
                 with st.container(border=True):
-                    title_col, remove_col = st.columns([5, 1.5])
-                    with title_col:
+                    left_col, right_col = st.columns([5, 1.5])
+                    with left_col:
                         st.markdown(f"**Сценарий {si}**")
-                    with remove_col:
+                    with right_col:
                         st.button(
                             "Удалить сценарий",
                             key=f"delete_scenario_{scenario_id}",
@@ -913,10 +948,7 @@ def render_decision_tree():
             if error:
                 break
 
-            name = st.session_state.get(
-                decision_option_key(option["id"]), ""
-            ).strip()
-
+            name = st.session_state.get(decision_option_key(option["id"]), "").strip()
             if not name:
                 error = f"Введите название варианта {oi}."
                 break
@@ -928,19 +960,14 @@ def render_decision_tree():
             scenarios = []
             for si, scenario in enumerate(option["scenarios"], start=1):
                 scenario_id = scenario["id"]
-                scenario_name = st.session_state.get(
-                    decision_scenario_key(scenario_id), ""
-                ).strip()
-
+                scenario_name = st.session_state.get(decision_scenario_key(scenario_id), "").strip()
                 if not scenario_name:
                     error = f"Заполните сценарий {si} варианта «{name}»."
                     break
 
                 scenarios.append({
                     "name": scenario_name,
-                    "probability": int(
-                        st.session_state[f"dt_probability_{scenario_id}"]
-                    ),
+                    "probability": int(st.session_state[f"dt_probability_{scenario_id}"]),
                     "score": float(st.session_state[f"dt_score_{scenario_id}"]),
                 })
 
@@ -982,9 +1009,9 @@ def render_decision_tree():
     result = st.session_state.dt_result
     if result:
         st.subheader("Результат")
-        columns = st.columns(len(result["options"]))
-        for column, option in zip(columns, result["options"]):
-            with column:
+        cols = st.columns(len(result["options"]))
+        for col, option in zip(cols, result["options"]):
+            with col:
                 label = (
                     "Лидер по оценке: "
                     if option["name"] == result["leader"]
@@ -996,6 +1023,7 @@ def render_decision_tree():
             "Результат служит ориентиром для обсуждения, а не автоматическим решением. "
             "Вероятности нормализуются отдельно внутри каждого варианта."
         )
+
         render_interactive_diagram(
             make_decision_diagram(result["question"], result["options"]),
             "derevo_resheniy",
@@ -1051,10 +1079,10 @@ def render_chain():
         link_id = link["id"]
 
         with st.container(border=True):
-            heading_col, remove_col = st.columns([5, 1.5])
-            with heading_col:
+            left_col, right_col = st.columns([5, 1.5])
+            with left_col:
                 st.markdown(f"**Звено {index}**")
-            with remove_col:
+            with right_col:
                 st.button(
                     "Удалить",
                     key=f"remove_chain_{link_id}",
@@ -1064,11 +1092,11 @@ def render_chain():
                     use_container_width=True,
                 )
 
-            left, right = st.columns(2)
-            with left:
+            c1, c2 = st.columns(2)
+            with c1:
                 thought = st.text_area("Мысли или образы", key=f"thought_{link_id}")
                 body = st.text_area("Ощущения в теле", key=f"body_{link_id}")
-            with right:
+            with c2:
                 emotion = st.text_area("Эмоции", key=f"emotion_{link_id}")
                 action = st.text_area("Импульсы или действия", key=f"action_{link_id}")
 
@@ -1184,10 +1212,10 @@ def render_exposure():
         step_id = step["id"]
 
         with st.container(border=True):
-            title_col, remove_col = st.columns([5, 1.5])
-            with title_col:
+            left_col, right_col = st.columns([5, 1.5])
+            with left_col:
                 st.markdown(f"**Ступень {index}**")
-            with remove_col:
+            with right_col:
                 st.button(
                     "Удалить",
                     key=f"remove_exposure_{step_id}",
@@ -1203,14 +1231,8 @@ def render_exposure():
                 0, 10, 3,
                 key=f"exp_distress_{step_id}",
             )
-            prediction = st.text_area(
-                "Прогноз или опасение",
-                key=f"exp_prediction_{step_id}",
-            )
-            plan = st.text_area(
-                "Обсуждаемый посильный шаг",
-                key=f"exp_plan_{step_id}",
-            )
+            prediction = st.text_area("Прогноз или опасение", key=f"exp_prediction_{step_id}")
+            plan = st.text_area("Обсуждаемый посильный шаг", key=f"exp_plan_{step_id}")
             status = st.selectbox(
                 "Статус",
                 ["Не обсуждали", "Обсудили", "Запланировали", "Попробовали"],
@@ -1290,10 +1312,7 @@ def render_act_matrix():
         "Она не оценивает поведение как правильное или неправильное."
     )
 
-    situation = st.text_area(
-        "Ситуация, которую хотите исследовать",
-        key="act_situation",
-    )
+    situation = st.text_area("Ситуация, которую хотите исследовать", key="act_situation")
     values = st.text_area(
         "Кто или что важно для вас? Какие качества жизни вы хотите воплощать?",
         key="act_values",
@@ -1437,9 +1456,7 @@ def render_library():
     items = list(TECHNIQUES.items())
     for start in range(0, len(items), 2):
         columns = st.columns(2)
-        for column, (technique_id, technique) in zip(
-            columns, items[start:start + 2]
-        ):
+        for column, (technique_id, technique) in zip(columns, items[start:start + 2]):
             with column:
                 with st.container(border=True):
                     st.markdown(f"### {technique['title']}")
@@ -1468,21 +1485,9 @@ def render_about():
     st.subheader("Команда разработчиков")
 
     developers = [
-        {
-            "name": "Артём Черемкин",
-            "role": "Разработчик сайта, практикующий психолог",
-            "photo": "developer1.jpg",
-        },
-        {
-            "name": "Анна Пыжьянова",
-            "role": "Практикующий психолог",
-            "photo": "developer2.jpg",
-        },
-        {
-            "name": "Ферузахон Сайдазимова",
-            "role": "Практикующий психолог",
-            "photo": "developer3.jpg",
-        },
+        {"name": "Артём Черемкин", "role": "Разработчик сайта, практикующий психолог", "photo": "developer1.jpg"},
+        {"name": "Анна Пыжьянова", "role": "Практикующий психолог", "photo": "developer2.jpg"},
+        {"name": "Ферузахон Сайдазимова", "role": "Практикующий психолог", "photo": "developer3.jpg"},
     ]
 
     columns = st.columns(3)
@@ -1492,7 +1497,6 @@ def render_about():
         with column:
             with st.container(border=True):
                 photo_path = app_dir / person["photo"]
-
                 if photo_path.is_file():
                     st.image(str(photo_path), use_container_width=True)
                 else:
