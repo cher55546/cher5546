@@ -105,7 +105,7 @@ st.markdown(
     }}
 
     .block-container {{
-        max-width: 1120px;
+        max-width: 1200px;
         padding-top: 1.2rem;
         padding-bottom: 4rem;
     }}
@@ -258,6 +258,285 @@ st.markdown(
         color: #648198;
         text-align: center;
     }}
+
+    .site-nav {{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 6px 0 20px 0;
+        border-bottom: 1px solid #D9E7F2;
+        margin-bottom: 18px;
+    }}
+
+    .brand-chip {{
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #234D6B;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+    }}
+
+    .brand-mark {{
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(109, 165, 205, .12);
+        border: 1px solid rgba(109, 165, 205, .35);
+        font-size: 1.1rem;
+    }}
+
+    .nav-link {{
+        color: #315773;
+        text-decoration: none;
+        font-weight: 700;
+        padding: 7px 5px;
+        border-bottom: 2px solid transparent;
+    }}
+
+    .nav-link.active {{
+        color: #214D6C;
+        border-bottom-color: #224D68;
+    }}
+
+    .search-box {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 56px;
+        border: 1px solid #D1E6F4;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.6);
+        padding: 0 16px;
+        margin: 0 0 24px 0;
+    }}
+
+    .search-box input {{
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        font-size: 1.1rem !important;
+        color: #294A65 !important;
+    }}
+
+    .search-box input::placeholder {{
+        color: #7691A5 !important;
+    }}
+
+    .hero {{
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        min-height: 340px;
+        padding: 38px 44px;
+        margin: 20px 0 24px;
+        border: 1px solid #D3E5F2;
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at 78% 38%, rgba(173, 223, 244, 0.78) 0 18%, transparent 18.5%),
+            linear-gradient(115deg, #F8FCFF 0%, #EAF5FC 100%);
+    }}
+
+    .hero-copy {{
+        position: relative;
+        z-index: 1;
+        max-width: 560px;
+    }}
+
+    .hero-title {{
+        margin: 0;
+        color: #214D6C;
+        font-size: clamp(2.7rem, 7vw, 4.7rem);
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -0.05em;
+    }}
+
+    .hero-subtitle {{
+        margin: 12px 0 18px;
+        color: #315773;
+        font-size: clamp(1.2rem, 2.5vw, 1.9rem);
+        font-weight: 700;
+        line-height: 1.25;
+    }}
+
+    .hero-description {{
+        max-width: 500px;
+        color: #476B85;
+        font-size: 1.08rem;
+        line-height: 1.6;
+    }}
+
+    .hero-art {{
+        position: absolute;
+        right: 4%;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 420px;
+        height: 260px;
+        opacity: .72;
+        filter: drop-shadow(0 12px 20px rgba(48,105,145,.12));
+    }}
+
+    .hero-art .brain {{
+        position: absolute;
+        inset: 0;
+        border: 2px solid rgba(87, 145, 176, 0.7);
+        border-radius: 48% 52% 42% 58% / 46% 42% 58% 54%;
+        transform: rotate(12deg);
+        background: rgba(164, 214, 236, .08);
+    }}
+
+    .hero-art .brain::before,
+    .hero-art .brain::after {{
+        content: "";
+        position: absolute;
+        inset: 24px 16px 18px 16px;
+        border: 2px solid rgba(87, 145, 176, 0.7);
+        border-radius: 50% 50% 46% 54% / 52% 48% 52% 48%;
+        transform: rotate(-10deg);
+    }}
+
+    .hero-art .brain::after {{
+        inset: 54px 38px 54px 38px;
+        border-radius: 50% 50% 42% 58% / 58% 44% 56% 42%;
+    }}
+
+    .hero-art .head {{
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 310px;
+        height: 190px;
+        border: 2px solid rgba(87, 145, 176, 0.7);
+        border-left: none;
+        border-radius: 50% 50% 44% 56% / 50% 38% 62% 50%;
+        transform: rotate(-4deg);
+    }}
+
+    .hero-art .head::before {{
+        content: "";
+        position: absolute;
+        inset: 12px 20px 12px 26px;
+        border: 2px solid rgba(87, 145, 176, 0.7);
+        border-radius: 50% 50% 44% 56% / 50% 38% 62% 50%;
+        border-left: none;
+    }}
+
+    .category-card {{
+        min-height: 120px;
+        padding: 16px;
+        border: 1px solid #D3E3EF;
+        border-radius: 18px;
+        background: rgba(248,252,255,.92);
+    }}
+
+    .category-icon {{
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }}
+
+    .category-title {{
+        color: #294A65;
+        font-weight: 800;
+        font-size: 1.08rem;
+    }}
+
+    .category-description {{
+        margin-top: 6px;
+        color: #648198;
+        font-size: .9rem;
+        line-height: 1.5;
+    }}
+
+    .tech-card {{
+        min-height: 210px;
+        padding: 18px 18px 12px;
+        border: 1px solid #D1E5F1;
+        border-radius: 18px;
+        background: rgba(248,252,255,.92);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }}
+
+    .tech-card-icon {{
+        width: 68px;
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        background: rgba(169, 213, 232, 0.2);
+        font-size: 2rem;
+    }}
+
+    .tech-card-title {{
+        color: #294A65;
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin-top: 14px;
+    }}
+
+    .tech-card-subtitle {{
+        color: #476B85;
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-top: 6px;
+    }}
+
+    .tech-card-meta {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 18px;
+    }}
+
+    .tech-card-tag {{
+        color: #5D7E97;
+        font-size: .85rem;
+    }}
+
+    .tech-card-button {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        border-radius: 12px;
+        border: 1px solid #6EA7CB;
+        background: linear-gradient(135deg, #D9EEFA, #E5F3FC);
+        color: #234D6B;
+        font-weight: 800;
+        padding: 0 14px;
+    }}
+
+    .section-heading {{
+        margin: 28px 0 10px;
+        color: #294A65;
+        font-size: 1.7rem;
+        font-weight: 800;
+    }}
+
+    @media (max-width: 650px) {{
+        .hero {{
+            min-height: 280px;
+            padding: 26px 22px;
+        }}
+        .hero-art {{
+            right: 2%;
+            bottom: -34px;
+            top: auto;
+            transform: none;
+            width: 220px;
+            height: 140px;
+            opacity: .25;
+        }}
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -273,21 +552,25 @@ TECHNIQUES = {
         "title": "Дерево решений",
         "short": "Разложить сложный выбор на варианты и возможные последствия.",
         "description": "Сравнение вариантов, исходов, вероятностей и оценок.",
+        "icon": "🌿",
     },
     "dbt_chain": {
         "title": "Цепочный анализ поведения (ДБТ)",
         "short": "Исследовать последовательность событий, реакций и последствий.",
         "description": "Карта контекста, звеньев цепочки и возможных точек вмешательства.",
+        "icon": "⛓️",
     },
     "exposure": {
         "title": "Иерархия экспозиции",
         "short": "Составить и обсудить лестницу ситуаций для постепенной практики.",
         "description": "Ситуации, прогнозы, посильные шаги и наблюдения.",
+        "icon": "⛰️",
     },
     "act_matrix": {
         "title": "ACT-матрица",
         "short": "Исследовать действия «от дискомфорта» и шаги «к ценностям».",
         "description": "Визуальная карта внутреннего опыта, поведения и выбранных действий.",
+        "icon": "🧭",
     },
 }
 
@@ -297,32 +580,132 @@ if "page" not in st.session_state:
 if "selected_technique" not in st.session_state:
     st.session_state.selected_technique = None
 
+if "page_history" not in st.session_state:
+    st.session_state.page_history = []
+
+
+def navigate(page, technique_id=None):
+    current = {
+        "page": st.session_state.page,
+        "selected_technique": st.session_state.selected_technique,
+    }
+    target = {
+        "page": page,
+        "selected_technique": technique_id,
+    }
+
+    if current != target:
+        st.session_state.page_history.append(current)
+        st.session_state.page_history = st.session_state.page_history[-30:]
+
+    st.session_state.page = page
+    st.session_state.selected_technique = technique_id
+
+
+def go_back():
+    if st.session_state.page_history:
+        previous = st.session_state.page_history.pop()
+        st.session_state.page = previous["page"]
+        st.session_state.selected_technique = previous["selected_technique"]
+    else:
+        st.session_state.page = "home"
+        st.session_state.selected_technique = None
+
 
 def go_home():
-    st.session_state.page = "home"
+    navigate("home")
 
 
 def go_library():
-    st.session_state.page = "library"
+    navigate("library")
 
 
 def go_about():
-    st.session_state.page = "about"
+    navigate("about")
 
 
 def open_technique(technique_id):
-    st.session_state.selected_technique = technique_id
-    st.session_state.page = "technique"
+    navigate("technique", technique_id)
+
+
+def search_techniques(query):
+    query = query.strip().casefold()
+
+    if not query:
+        return list(TECHNIQUES.items())
+
+    results = []
+    for technique_id, technique in TECHNIQUES.items():
+        searchable_text = " ".join(
+            [
+                technique["title"],
+                technique["short"],
+                technique["description"],
+            ]
+        ).casefold()
+
+        if query in searchable_text:
+            results.append((technique_id, technique))
+
+    return results
+
+
+def render_technique_cards(items, key_prefix):
+    if not items:
+        st.info("Ничего не найдено. Попробуйте изменить поисковый запрос.")
+        return
+
+    for start in range(0, len(items), 2):
+        columns = st.columns(2)
+        for column, (technique_id, technique) in zip(columns, items[start:start + 2]):
+            with column:
+                st.markdown(
+                    f"""
+                    <div class="tech-card">
+                        <div>
+                            <div class="tech-card-icon">{technique.get('icon', '🧠')}</div>
+                            <div class="tech-card-title">{technique['title']}</div>
+                            <div class="tech-card-subtitle">{technique['short']}</div>
+                        </div>
+                        <div class="tech-card-meta">
+                            <div class="tech-card-tag">{technique['description']}</div>
+                            <button class="tech-card-button" onclick="document.querySelector('[data-testid=&quot;stAppViewContainer&quot;]').scrollTo({{ top: 0, behavior: 'smooth' }})">
+                                Открыть
+                            </button>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                st.button(
+                    "Открыть технику →",
+                    key=f"{key_prefix}_{technique_id}",
+                    on_click=open_technique,
+                    args=(technique_id,),
+                    use_container_width=True,
+                )
 
 
 def render_navigation():
-    home_col, library_col, _ = st.columns([1.2, 1.2, 5])
+    back_col, home_col, library_col, about_col, _ = st.columns([1.2, 1.2, 1.3, 1.4, 5])
+
+    with back_col:
+        st.button(
+            "← Назад",
+            on_click=go_back,
+            disabled=not st.session_state.page_history,
+            use_container_width=True,
+        )
 
     with home_col:
         st.button("Главная", on_click=go_home, use_container_width=True)
 
     with library_col:
         st.button("Библиотека", on_click=go_library, use_container_width=True)
+
+    with about_col:
+        st.button("О проекте", on_click=go_about, use_container_width=True)
 
 
 # ---------------------------------------------------------------------
@@ -667,7 +1050,6 @@ def make_decision_diagram(question, options):
             "center_x": sum(scenario_centers) / len(scenario_centers),
         })
 
-    # Lines from leaves to option cards
     for entry in option_layout:
         for sx in entry["scenario_centers"]:
             content.append(
@@ -676,7 +1058,6 @@ def make_decision_diagram(question, options):
                 f'fill="none" stroke="{entry["color"]}" stroke-width="4"/>'
             )
 
-    # Lines from option cards to decision card
     for entry in option_layout:
         content.append(
             f'<path d="M {entry["center_x"]} {option_y + option_h} '
@@ -1365,103 +1746,145 @@ def render_act_matrix():
 # ---------------------------------------------------------------------
 
 def render_home():
-    neuron_uri = "data:image/svg+xml," + quote(NEURON_SVG, safe="")
-
     st.markdown(
-        f"""
-        <div style="
-            min-height:350px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:42px 25px;
-            margin:20px 0 26px;
-            box-sizing:border-box;
-            border:1px solid #BBD9EC;
-            border-radius:30px;
-            background-color:rgba(232,245,253,.94);
-            background-image:url('{neuron_uri}');
-            background-size:cover;
-            box-shadow:0 18px 42px rgba(48,105,145,.12);
-            text-align:center;
-        ">
-          <div style="
-              max-width:820px;
-              padding:24px;
-              border-radius:24px;
-              background:rgba(248,252,255,.92);
-              box-shadow:0 8px 26px rgba(48,105,145,.07);
-          ">
-            <div style="
-                color:#214D6C;
-                font-family:Arial,sans-serif;
-                font-size:clamp(3.8rem,9vw,6.7rem);
-                font-weight:800;
-                line-height:1;
-                letter-spacing:.035em;">
-                ПСИ-БЛОК
+        """
+        <div class="site-nav">
+            <div class="brand-chip">
+                <span class="brand-mark">◉</span>
+                <span>ПСИ-БЛОК</span>
             </div>
-            <div style="
-                max-width:760px;
-                margin:20px auto 0;
-                color:#476B85;
-                font-family:Arial,sans-serif;
-                font-size:1.2rem;
-                line-height:1.7;">
-                Пространство с наглядными инструментами для совместной работы
-                психолога и клиента. Мы создаём его, чтобы структурировать
-                обсуждение и помогать возвращаться к важным идеям в ходе работы.
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 20px;">
+                <a href="#" class="nav-link active" onclick="return false;">Главная</a>
+                <a href="#" class="nav-link" onclick="return false;">Библиотека</a>
+                <a href="#" class="nav-link" onclick="return false;">О проекте</a>
+                <a href="#" class="nav-link" onclick="return false;">Помощь</a>
             </div>
-          </div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-left: 12px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(124,170,203,0.1); border: 1px solid rgba(124,170,203,0.3); display: flex; align-items: center; justify-content: center;">⌕</div>
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(124,170,203,0.1); border: 1px solid rgba(124,170,203,0.3); display: flex; align-items: center; justify-content: center;">◔</div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    left, right = st.columns(2)
-    with left:
-        st.button(
-            "Библиотека техник",
-            type="primary",
-            use_container_width=True,
-            on_click=go_library,
-        )
-    with right:
-        st.button(
-            "О нас",
-            type="primary",
-            use_container_width=True,
-            on_click=go_about,
-        )
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="hero-copy">
+                <h1 class="hero-title">ПСИ-БЛОК</h1>
+                <div class="hero-subtitle">Инструменты для глубокой психологической работы</div>
+                <div class="hero-description">
+                    Библиотека проверенных психологических техник для специалистов и клиентов
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 14px; flex-wrap: wrap;">
+                    <button style="display:inline-flex; align-items:center; justify-content:center; min-height: 48px; padding: 0 24px; border-radius: 14px; border: 1px solid #6EA7CB; background: linear-gradient(135deg, #D9EEFA, #E5F3FC); color: #234D6B; font-weight: 800; cursor: pointer;">
+                        Перейти в библиотеку →
+                    </button>
+                    <button style="display:inline-flex; align-items:center; justify-content:center; min-height: 48px; padding: 0 22px; border-radius: 14px; border: 1px solid #C9DFEF; background: rgba(255,255,255,0.42); color: #315773; font-weight: 700; cursor: pointer;">
+                        Узнать больше
+                    </button>
+                </div>
+            </div>
+            <div class="hero-art">
+                <div class="brain"></div>
+                <div class="head"></div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    st.divider()
-    st.markdown("### Инструменты для совместной работы")
-    st.write(
-        "Выберите технику, чтобы открыть интерактивный черновик. "
-        "Материалы помогают структурировать обсуждение."
+    st.button(
+        "Перейти в библиотеку →",
+        type="primary",
+        on_click=go_library,
+        use_container_width=True,
+    )
+
+    st.markdown(
+        """
+        <div class="search-box">
+            <span style="font-size: 1.4rem; color: #315773;">⌕</span>
+            <input placeholder="Найти технику..." style="width: 100%; border: none; outline: none; font-size: 1.05rem; background: transparent;" />
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="section-heading">Исследуйте библиотеку</div>',
+        unsafe_allow_html=True,
+    )
+
+    categories = [
+        ("💭", "Эмоции", "Работа с эмоциональными состояниями"),
+        ("💬", "Коммуникация", "Взаимодействие и отношения"),
+        ("🧠", "Самоосознание", "Образ себя и границы"),
+        ("◎", "Мышление", "Упражнения на переоценку и рассуждение"),
+    ]
+
+    category_columns = st.columns(4)
+    for column, (icon, title, desc) in zip(category_columns, categories):
+        with column:
+            st.markdown(
+                f"""
+                <div class="category-card">
+                    <div class="category-icon">{icon}</div>
+                    <div class="category-title">{title}</div>
+                    <div class="category-description">{desc}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown(
+        '<div class="section-heading">Популярные инструменты</div>',
+        unsafe_allow_html=True,
+    )
+
+    featured = list(TECHNIQUES.items())[:4]
+    render_technique_cards(featured, "home_featured")
+
+    st.markdown(
+        '<div class="section-heading">ПСИ-БЛОК — ваш помощник в психологической практике</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div style="
+            background: rgba(219, 239, 249, 0.6);
+            border: 1px solid #D2E3F0;
+            border-radius: 22px;
+            padding: 22px 24px;
+            margin-top: 10px;
+        ">
+            <div style="font-size: 1.05rem; line-height: 1.6; color: #315773;">
+                Удобный инструмент для работы с клиентами и развития профессиональных навыков.
+                Структурируйте разговор, фиксируйте идеи и возвращайтесь к важным темам на каждом этапе.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
 def render_library():
-    st.title("Библиотека техник")
-    st.write("Выберите инструмент, который хотите открыть.")
+    st.markdown(
+        '<div class="section-heading" style="margin-top: 0;">Библиотека техник</div>',
+        unsafe_allow_html=True,
+    )
 
-    items = list(TECHNIQUES.items())
-    for start in range(0, len(items), 2):
-        columns = st.columns(2)
-        for column, (technique_id, technique) in zip(columns, items[start:start + 2]):
-            with column:
-                with st.container(border=True):
-                    st.markdown(f"### {technique['title']}")
-                    st.write(technique["short"])
-                    st.caption(technique["description"])
-                    st.button(
-                        "Открыть технику",
-                        key=f"open_{technique_id}",
-                        on_click=open_technique,
-                        args=(technique_id,),
-                        use_container_width=True,
-                    )
+    query = st.text_input(
+        "Поиск по техникам",
+        key="library_technique_search",
+        placeholder="Например: тревожность, выбор, эмоции...",
+        label_visibility="collapsed",
+    )
+
+    items = search_techniques(query)
+    render_technique_cards(items, "library_open")
 
 
 def render_about():
@@ -1526,7 +1949,7 @@ def render_selected_technique():
         st.button("Вернуться в библиотеку", on_click=go_library)
         return
 
-    st.button("К библиотеке", on_click=go_library)
+    st.button("← Назад", on_click=go_back)
     st.divider()
 
     if technique_id == "decision_tree":
